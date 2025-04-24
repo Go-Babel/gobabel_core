@@ -1,4 +1,5 @@
-import 'package:gobabel_core/go_babel_core.dart';
+typedef LanguageCode = String;
+typedef CountryCode = String;
 
 class BabelSupportedLocales {
   final LanguageCode languageCode;

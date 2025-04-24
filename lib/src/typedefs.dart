@@ -1,5 +1,3 @@
-typedef LanguageCode = String;
-typedef CountryCode = String;
 typedef TranslationKey = String;
 typedef TranslationContent = String;
 typedef DownloadUrl = String;
