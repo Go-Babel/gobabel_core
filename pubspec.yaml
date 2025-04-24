@@ -1,7 +1,8 @@
 name: gobabel_core
 description: All core functionalities of the GO-Babel project. This package is used by the CLI and the client.
 version: 1.0.0
-publish_to: 'none'
+repository: https://github.com/Go-Babel/gobabel_core
+issue_tracker: https://github.com/Go-Babel/gobabel_core/issues
 
 environment:
   sdk: ^3.7.2 
