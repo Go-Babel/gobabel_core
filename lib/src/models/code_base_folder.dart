@@ -1,6 +1,17 @@
 import 'dart:io';
 import 'package:path/path.dart' as p;
 
+class FolderInfo {
+  final String name;
+  final String fullPath;
+
+  FolderInfo({required this.name, required this.fullPath});
+
+  @override
+  String toString() =>
+      name; // Ensures `TreeSliver.defaultTreeNodeBuilder` displays only the name
+}
+
 class CodeBaseFolder {
   final String name;
   final List<CodeBaseFolder> subFolders;
@@ -67,4 +78,47 @@ CodeBaseFolder? buildFolderTreeSync(Directory dir) {
     return CodeBaseFolder(name: folderName, subFolders: children);
   }
   return null;
+}
+
+List<CodeBaseFolder> buildFolderTreeFromListOfFiles(List<String> filePaths) {
+  // Initialize the list of top-level folders
+  final roots = <CodeBaseFolder>[];
+
+  // Process each file path
+  for (final filePath in filePaths) {
+    // Split the path into parts (directories and file name)
+    final parts = filePath.split('/');
+
+    // Skip if the path doesn’t contain at least one directory and a file
+    if (parts.length < 2) continue;
+
+    // Extract directories (exclude the file name)
+    final directories = parts.sublist(0, parts.length - 1);
+
+    // Start at the root level
+    var currentLevel = roots;
+
+    // Build the folder structure level-by-level
+    for (final dir in directories) {
+      // Check if the folder already exists at this level
+      CodeBaseFolder? currentFolder;
+      for (final folder in currentLevel) {
+        if (folder.name == dir) {
+          currentFolder = folder;
+          break;
+        }
+      }
+
+      // If not found, create a new folder and add it to the current level
+      if (currentFolder == null) {
+        currentFolder = CodeBaseFolder(name: dir, subFolders: []);
+        currentLevel.add(currentFolder);
+      }
+
+      // Move to the subfolders of the current folder
+      currentLevel = currentFolder.subFolders;
+    }
+  }
+
+  return roots;
 }
