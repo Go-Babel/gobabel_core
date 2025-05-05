@@ -8,8 +8,7 @@ class FolderInfo {
   FolderInfo({required this.name, required this.fullPath});
 
   @override
-  String toString() =>
-      name; // Ensures `TreeSliver.defaultTreeNodeBuilder` displays only the name
+  String toString() => name; // Ensures `TreeSliver.defaultTreeNodeBuilder` displays only the name
 }
 
 class CodeBaseFolder {
@@ -41,7 +40,9 @@ Future<CodeBaseFolder?> buildFolderTree(Directory dir) async {
   final children = <CodeBaseFolder>[];
 
   await for (final entity in dir.list(followLinks: false)) {
-    if (entity is File && p.extension(entity.path) == '.dart') {
+    if (entity is File &&
+        p.extension(entity.path) == '.dart' &&
+        entity.path.contains('lib/')) {
       hasDartFile = true;
     } else if (entity is Directory) {
       final child = await buildFolderTree(entity);
@@ -64,7 +65,9 @@ CodeBaseFolder? buildFolderTreeSync(Directory dir) {
   final children = <CodeBaseFolder>[];
 
   for (final entity in dir.listSync(followLinks: false)) {
-    if (entity is File && p.extension(entity.path) == '.dart') {
+    if (entity is File &&
+        p.extension(entity.path) == '.dart' &&
+        entity.path.contains('/lib/')) {
       hasDartFile = true;
     } else if (entity is Directory) {
       final child = buildFolderTreeSync(entity);
@@ -80,7 +83,7 @@ CodeBaseFolder? buildFolderTreeSync(Directory dir) {
   return null;
 }
 
-List<CodeBaseFolder> buildFolderTreeFromListOfFiles(List<String> filePaths) {
+List<CodeBaseFolder> buildFolderTreeFromListOfFiles(Set<String> filePaths) {
   // Initialize the list of top-level folders
   final roots = <CodeBaseFolder>[];
 
