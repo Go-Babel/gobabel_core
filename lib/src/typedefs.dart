@@ -4,3 +4,7 @@ typedef DownloadUrl = String;
 typedef L10nKey = String;
 typedef L10nValue = String;
 typedef ContextPath = String;
+typedef FileContent = String;
+typedef FilePath = String;
+typedef BabelFunctionDeclaration = String;
+typedef BabelFunctionImplementation = String;

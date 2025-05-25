@@ -16,27 +16,6 @@ class BabelSupportedLocales {
         : displayName;
   }
 
-  /// Returns the flag emoji for the country code.
-  ///
-  /// For example, 'US' returns '🇺🇸', 'GB' returns '🇬🇧'.
-  /// Returns '🏳️' if the country code doesn't have a corresponding flag emoji.
-  String get flagEmoji {
-    // Skip if country code doesn't have exactly 2 characters
-    if (countryCode.length != 2) return '🏳️';
-
-    // Convert country code to regional indicator symbols
-    // Each uppercase letter is shifted to a Unicode regional indicator symbol
-    // by adding an offset of 127397 to its ASCII value
-    try {
-      final int firstLetter = countryCode.codeUnitAt(0) + 127397;
-      final int secondLetter = countryCode.codeUnitAt(1) + 127397;
-
-      return String.fromCharCodes([firstLetter, secondLetter]);
-    } catch (e) {
-      return '🏳️';
-    }
-  }
-
   BabelSupportedLocales._(
     this.languageCode,
     this.countryCode,
@@ -47,12 +26,10 @@ class BabelSupportedLocales {
     CountryCode? countryCode,
   ]) {
     try {
-      final uppercanseCountryCode = countryCode?.toUpperCase();
       return BabelSupportedLocales.values.firstWhere(
         (element) =>
             element.languageCode == languageCode &&
-            (uppercanseCountryCode == null ||
-                element.countryCode == uppercanseCountryCode),
+            (countryCode == null || element.countryCode == countryCode),
       );
     } catch (e) {
       return null;
