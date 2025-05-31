@@ -8,3 +8,4 @@ typedef FileContent = String;
 typedef FilePath = String;
 typedef BabelFunctionDeclaration = String;
 typedef BabelFunctionImplementation = String;
+typedef Sha1 = String;

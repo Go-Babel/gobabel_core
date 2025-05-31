@@ -14,10 +14,14 @@ Future<T> runWithSpinner<T>(
 }) async {
   const spinnerChars = ['|', '/', '-', '\\'];
   int idx = 0;
+  final stopwatch = Stopwatch()..start();
 
   // Start a periodic timer to update the spinner
   final timer = Timer.periodic(interval, (_) {
-    stdout.write('\r${spinnerChars[idx % spinnerChars.length]} $message');
+    final seconds = (stopwatch.elapsedMilliseconds / 1000).toStringAsFixed(1);
+    stdout.write(
+      '\r${spinnerChars[idx % spinnerChars.length]} [ ${seconds}s ] $message',
+    );
     idx++;
   });
 
@@ -31,13 +35,15 @@ Future<T> runWithSpinner<T>(
   } finally {
     // Stop spinner and clear line
     timer.cancel();
+    stopwatch.stop();
+    final totalTime = (stopwatch.elapsedMilliseconds / 1000).toStringAsFixed(1);
     stdout
-      ..write('\r') // Move to line start
-      ..write(' ' * (message.length + 4)) // Overwrite spinner+message
-      ..write('\r'); // Move back again
+      ..write('\r')
+      ..write(' ' * (message.length + 10)) // Increased padding for timer
+      ..write('\r');
 
-    // Show success message
-    stdout.writeln('✅ ${successMessage.green}');
+    // Show success message with total time
+    stdout.writeln('✅ ${successMessage.green} (${totalTime}s)');
 
     // end stdout
     // stdout.flush();

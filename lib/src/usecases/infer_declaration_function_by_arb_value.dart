@@ -2,18 +2,18 @@ import 'package:recase/recase.dart';
 import 'package:gobabel_core/gobabel_core.dart';
 
 class InferDeclarationFunctionByArbValueUsecase {
-  final RegExp regex = RegExp(r'{(?:\w|\s)+}', multiLine: true);
+  final RegExp regex = RegExp(r'{(?<dynamicField>[\w|\s]+)}', multiLine: true);
 
   BabelFunctionDeclaration call({
     required L10nKey key,
     required L10nValue value,
   }) {
-    final String funcName = value.toCamelCase;
+    final String funcName = key;
     final List<String> dynamicFields = [];
 
     final Iterable<RegExpMatch> matches = regex.allMatches(value);
     for (final RegExpMatch match in matches) {
-      final String dynamicField = match.group(1)!;
+      final String dynamicField = match.namedGroup('dynamicField')!;
       dynamicFields.add(dynamicField);
     }
 
