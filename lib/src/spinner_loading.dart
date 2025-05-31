@@ -17,7 +17,7 @@ Future<T> runWithSpinner<T>(
 
   // Start a periodic timer to update the spinner
   final timer = Timer.periodic(interval, (_) {
-    stdout.write('\r${spinnerChars[idx % spinnerChars.length]} $message...');
+    stdout.write('\r${spinnerChars[idx % spinnerChars.length]} $message');
     idx++;
   });
 
