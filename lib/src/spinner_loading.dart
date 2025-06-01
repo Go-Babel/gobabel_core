@@ -28,24 +28,28 @@ Future<T> runWithSpinner<T>(
   try {
     // Await the user-provided action
     final result = await action();
-    return result;
-  } catch (e) {
-    // Rethrow after cleaning up spinner
-    rethrow;
-  } finally {
-    // Stop spinner and clear line
     timer.cancel();
     stopwatch.stop();
     final totalTime = (stopwatch.elapsedMilliseconds / 1000).toStringAsFixed(1);
     stdout
       ..write('\r')
-      ..write(' ' * (message.length + 10)) // Increased padding for timer
+      ..write(' ' * (message.length + 15))
       ..write('\r');
-
-    // Show success message with total time
     stdout.writeln('✅ ${successMessage.green} (${totalTime}s)');
-
-    // end stdout
-    // stdout.flush();
+    return result;
+  } catch (e) {
+    timer.cancel();
+    stopwatch.stop();
+    final totalTime = (stopwatch.elapsedMilliseconds / 1000).toStringAsFixed(1);
+    stdout
+      ..write('\r')
+      ..write(' ' * (message.length + 15))
+      ..write('\r');
+    stdout.writeln('❌ $message (${totalTime}s)');
+    rethrow;
+  } finally {
+    // Clean up
+    timer.cancel();
+    stopwatch.stop();
   }
 }
