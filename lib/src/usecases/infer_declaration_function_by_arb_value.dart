@@ -8,7 +8,7 @@ class InferDeclarationFunctionByArbValueUsecase {
     required L10nKey key,
     required L10nValue value,
   }) {
-    final String funcName = key;
+    String funcName = key;
     final List<String> dynamicFields = [];
 
     final Iterable<RegExpMatch> matches = regex.allMatches(value);
@@ -19,7 +19,7 @@ class InferDeclarationFunctionByArbValueUsecase {
 
     return '''${value.formatToComment}
   static String $funcName(${dynamicFields.map((e) => 'Object? $e').join(', ')}) {
-    return i._getByKey('$funcName')${dynamicFields.map((e) => '.replaceAll(\'{$e}\', $e.toString())').join()};
+    return i._getByKey('$key')${dynamicFields.map((e) => '.replaceAll(\'{$e}\', $e.toString())').join()};
   }''';
   }
 }
