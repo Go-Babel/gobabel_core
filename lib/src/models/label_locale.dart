@@ -6,16 +6,6 @@ class BabelSupportedLocales {
   final LanguageCode countryCode;
   final String displayName;
 
-  /// Same as [displayName], but without
-  /// everthing that is after "(" caracter<p>
-  /// <b>Example:</b><p>
-  /// "Gujarati (India)" => "Gujarati"
-  String get cleanDisplayName {
-    return displayName.contains('(')
-        ? displayName.split('(').first.trim()
-        : displayName;
-  }
-
   /// Returns the flag emoji for the country code.
   ///
   /// For example, 'US' returns '🇺🇸', 'GB' returns '🇬🇧'.
@@ -73,9 +63,12 @@ class BabelSupportedLocales {
   @override
   String toString() => '${languageCode}_${countryCode}_$displayName';
 
-  factory BabelSupportedLocales.fromString(String val) {
-    final split = val.split('_');
-    return BabelSupportedLocales._(split.first, split[1], split.last);
+  /// Returns null if could not cast. This function is to cast [BabelSupportedLocales.toString()]
+  static BabelSupportedLocales? fromString(String? val) {
+    final split = val?.contains('_') != true ? null : val!.split('_');
+    if (split == null) return null;
+
+    return BabelSupportedLocales.fromLocale(split.first, split[1]);
   }
 
   static List<BabelSupportedLocales> values = [
@@ -987,4 +980,27 @@ class BabelSupportedLocales {
   @override
   int get hashCode =>
       languageCode.hashCode ^ countryCode.hashCode ^ displayName.hashCode;
+
+  /// Returns the language name from the [displayName].
+  ///
+  /// For example, "Gujarati (India)" => "Gujarati"
+  String get languageName =>
+      displayName.contains('(')
+          ? displayName.split('(').first.trim()
+          : displayName;
+
+  /// Returns the country name from the [displayName].
+  ///
+  /// For example, "Gujarati (India)" => "India"
+  /// Returns an empty string if no country name is found.
+  String get countryName {
+    if (displayName.contains('(') && displayName.contains(')')) {
+      final startIndex = displayName.indexOf('(') + 1;
+      final endIndex = displayName.lastIndexOf(')');
+      if (startIndex < endIndex) {
+        return displayName.substring(startIndex, endIndex).trim();
+      }
+    }
+    return '';
+  }
 }
