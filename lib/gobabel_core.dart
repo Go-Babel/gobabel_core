@@ -3,6 +3,7 @@ library;
 export 'src/models/label_locale.dart';
 export 'src/spinner_loading.dart';
 export 'src/models/code_base_folder.dart';
+export 'src/core/api_request_splitter.dart';
 export 'src/constants.dart';
 export 'src/case_identify.dart';
 export 'src/typedefs.dart';
