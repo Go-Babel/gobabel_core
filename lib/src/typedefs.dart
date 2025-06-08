@@ -6,6 +6,7 @@ typedef L10nValue = String;
 typedef ContextPath = String;
 typedef FileContent = String;
 typedef FilePath = String;
+typedef HardCodedString = String;
 typedef BabelFunctionDeclaration = String;
 typedef BabelFunctionImplementation = String;
 typedef Sha1 = String;

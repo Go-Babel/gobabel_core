@@ -4,7 +4,7 @@ const String babelText =
     babelTextDependencies +
     r'''class Babel {
   static Babel? _instance;
-  final SharedPreferencesAsync _asyncPrefs = SharedPreferencesAsync();
+  late final SharedPreferencesAsync _asyncPrefs;
   // Singleton pattern, avoid self instance
   Babel._();
   static Babel get instance => _instance ??= Babel._();
@@ -28,7 +28,8 @@ const String babelText =
     return _arbState.arbData;
   }
 
-  Future<void> initialize({required SharedPreferences? prefs}) async {
+  Future<void> initialize({required SharedPreferencesAsync? prefs}) async {
+    _asyncPrefs = prefs ?? SharedPreferencesAsync();
     final ArbState? cacheArbState = await _getCacheArbState();
     try {
       final ArbState apiState = await _fetchArbData();
