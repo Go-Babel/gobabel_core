@@ -28,7 +28,7 @@ const String babelText =
     return _arbState.arbData;
   }
 
-  Future<void> initialize({required SharedPreferencesAsync? prefs}) async {
+  Future<void> initialize({SharedPreferencesAsync? prefs}) async {
     _asyncPrefs = prefs ?? SharedPreferencesAsync();
     final ArbState? cacheArbState = await _getCacheArbState();
     try {

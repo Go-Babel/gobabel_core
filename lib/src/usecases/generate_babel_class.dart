@@ -11,7 +11,7 @@ class GenerateBabelClassUsecase {
       fileContent.write('$d\n');
     }
 
-    fileContent.write('\n}');
+    fileContent.write('}');
 
     return fileContent
         .toString()

@@ -2,7 +2,7 @@ import 'package:recase/recase.dart';
 import 'package:gobabel_core/gobabel_core.dart';
 
 class InferDeclarationFunctionByArbValueUsecase {
-  final RegExp regex = RegExp(r'{(?<dynamicField>[\w|\s]+)}', multiLine: true);
+  final RegExp regex = RegExp(r'{(?<dynamicField> ?\w+ ?)}', multiLine: true);
 
   BabelFunctionDeclaration call({
     required L10nKey key,
@@ -17,7 +17,7 @@ class InferDeclarationFunctionByArbValueUsecase {
       dynamicFields.add(dynamicField);
     }
 
-    return '''${value.formatToComment}
+    return '''${value.trimHardcodedString.formatToComment}
   static String $funcName(${dynamicFields.map((e) => 'Object? $e').join(', ')}) {
     return i._getByKey('$key')${dynamicFields.map((e) => '.replaceAll(\'{$e}\', $e.toString())').join()};
   }''';

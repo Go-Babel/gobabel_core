@@ -1,5 +1,5 @@
 const String babelTextDependencies =
-    r'''// ignore_for_file: public_member_api_docs, sort_constructors_first, non_constant_identifier_names, deprecated_member_use, avoid_web_libraries_in_flutter, unused_element, depend_on_referenced_packages
+    r'''// ignore_for_file: public_member_api_docs, sort_constructors_first, non_constant_identifier_names, deprecated_member_use, avoid_web_libraries_in_flutter, unused_element, depend_on_referenced_packages, unintended_html_in_doc_comment
 import 'dart:async';
 import 'dart:convert';
 import 'dart:isolate';
