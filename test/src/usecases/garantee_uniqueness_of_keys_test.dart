@@ -8,7 +8,7 @@ void main() {
     setUp(() {
       usecase = const GaranteeUniquenessOfArbKeysUsecase();
       // Reset the static map before each test
-      GaranteeUniquenessOfArbKeysUsecase.alreadyCreatedUniqueKeys.clear();
+      GaranteeUniquenessOfArbKeysUsecase.clear();
     });
 
     group('Basic uniqueness', () {

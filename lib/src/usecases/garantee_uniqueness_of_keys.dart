@@ -4,7 +4,19 @@ typedef NewL10nKey = L10nKey;
 
 class GaranteeUniquenessOfArbKeysUsecase {
   const GaranteeUniquenessOfArbKeysUsecase();
-  static Map<String, int> alreadyCreatedUniqueKeys = {};
+  static final Map<TranslationKey, int> _alreadyCreatedUniqueKeys = {};
+  static void clear() {
+    _alreadyCreatedUniqueKeys.clear();
+  }
+
+  static void addUniqueKeys(TranslationKey newKey) {
+    if (_alreadyCreatedUniqueKeys.containsKey(newKey)) {
+      _alreadyCreatedUniqueKeys[newKey] =
+          _alreadyCreatedUniqueKeys[newKey]! + 1;
+    } else {
+      _alreadyCreatedUniqueKeys[newKey] = 1;
+    }
+  }
 
   NewL10nKey call(L10nKey key) {
     // Thease parts will throw the error "expected_identifier_but_got_keyword" if used as a function name
@@ -50,15 +62,21 @@ class GaranteeUniquenessOfArbKeysUsecase {
     }
 
     final baseKey = key;
-    final currentCount = alreadyCreatedUniqueKeys[baseKey] ?? 0;
+    final currentCount = _alreadyCreatedUniqueKeys[baseKey] ?? 0;
 
-    if (currentCount == 0) {
-      alreadyCreatedUniqueKeys[baseKey] = 1;
-      return key;
+    String finalKey = key;
+
+    if (currentCount != 0) {
+      final newCount = currentCount + 1;
+      if (key.endsWith('_')) {
+        finalKey = '$key$newCount';
+      } else {
+        finalKey = '${key}_$newCount';
+      }
     }
 
-    final newCount = currentCount + 1;
-    alreadyCreatedUniqueKeys[baseKey] = newCount;
-    return '${key}_$newCount';
+    addUniqueKeys(finalKey);
+
+    return finalKey;
   }
 }
