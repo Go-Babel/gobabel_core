@@ -113,7 +113,7 @@ const String babelText =
       Uri(
         host: _gobabelRoute,
         path: '/labels/available_locales',
-        queryParameters: {'projectShaIdentifier': _projectShaIdentifier},
+        queryParameters: {'projectShaIdentifier': _projectIdentifier},
       ),
     );
 
