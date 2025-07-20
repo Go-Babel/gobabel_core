@@ -5,8 +5,6 @@ export 'src/constants.dart';
 export 'src/core/api_request_splitter.dart';
 export 'src/core/extensions/result_extension.dart';
 export 'src/core/extensions/string_extension.dart';
-export 'src/core/generated_files_reference/babel_text.dart';
-export 'src/core/generated_files_reference/babel_text_dependencies.dart';
 export 'src/models/code_base_folder.dart';
 export 'src/models/label_locale.dart';
 export 'src/typedefs.dart';

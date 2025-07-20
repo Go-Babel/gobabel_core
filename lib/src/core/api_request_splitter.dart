@@ -12,8 +12,10 @@ import 'package:gobabel_core/gobabel_core.dart';
 /// @param inputMap The original map to be split into groups
 /// @return A list of maps, each representing a manageable group for API requests
 List<Map<String, String>> splitIntoManageableGroupsForApi(
-  Map<String, String> inputMap,
-) {
+  Map<String, String> inputMap, [
+  int? multiplier,
+]) {
+  final refMultiplier = multiplier ?? kRequestMaxKeyMultiplaier;
   if (inputMap.isEmpty) return [];
   if (inputMap.length <= 1) return [Map.from(inputMap)];
 
@@ -30,9 +32,8 @@ List<Map<String, String>> splitIntoManageableGroupsForApi(
     final entryLength = keyLength + valueLength;
 
     // Check if adding this entry would exceed either limit
-    if (currentGroup.length >= (100 * kRequestMaxKeyMultiplaier) ||
-        currentGroupCharCount + entryLength >
-            (12000 * kRequestMaxKeyMultiplaier)) {
+    if (currentGroup.length >= (100 * refMultiplier) ||
+        currentGroupCharCount + entryLength > (12000 * refMultiplier)) {
       // Current group is full, add it to groups and start a new one
       groups.add(Map.from(currentGroup));
       currentGroup = {};
