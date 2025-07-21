@@ -37,12 +37,18 @@ class BabelSupportedLocales {
     CountryCode? countryCode,
   ]) {
     try {
-      final uppercanseCountryCode = countryCode?.toUpperCase();
+      final lowerCaseLanguageCode = languageCode.toLowerCase();
+      final upperCaseCountryCode = countryCode?.toUpperCase();
+
+      if (lowerCaseLanguageCode == 'en' && upperCaseCountryCode == null) {
+        return BabelSupportedLocales.enUS;
+      }
+
       return BabelSupportedLocales.values.firstWhere(
         (element) =>
-            element.languageCode == languageCode &&
-            (uppercanseCountryCode == null ||
-                element.countryCode == uppercanseCountryCode),
+            element.languageCode == lowerCaseLanguageCode &&
+            (upperCaseCountryCode == null ||
+                element.countryCode == upperCaseCountryCode),
       );
     } catch (e) {
       return null;
