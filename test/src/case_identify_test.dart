@@ -180,7 +180,7 @@ void main() {
         expect(CaseIdentifyRegex.isPascalDotCase('Hello'), isFalse); // Single word
         expect(CaseIdentifyRegex.isPascalDotCase('hello.world'), isFalse); // dot.case
         expect(CaseIdentifyRegex.isPascalDotCase('Hello.world'), isFalse); // Mixed
-        expect(CaseIdentifyRegex.isPascalDotCase('HELLO.WORLD'), isFalse); // All caps
+        expect(CaseIdentifyRegex.isPascalDotCase('HELLO.WORLD'), isTrue); // All caps (now allowed)
         expect(CaseIdentifyRegex.isPascalDotCase('HelloWorld'), isFalse); // PascalCase
         expect(CaseIdentifyRegex.isPascalDotCase('.Hello.World'), isFalse); // Leading dot
         expect(CaseIdentifyRegex.isPascalDotCase(''), isFalse); // Empty
@@ -218,7 +218,7 @@ void main() {
         expect(CaseIdentifyRegex.isPathCase('/home/user/documents'), isTrue);
         expect(CaseIdentifyRegex.isPathCase('path/to/file.dart'), isTrue);
         expect(CaseIdentifyRegex.isPathCase('folder/subfolder/'), isTrue);
-        expect(CaseIdentifyRegex.isPathCase('/'), isTrue); // Root path
+        expect(CaseIdentifyRegex.isPathCase('/'), isFalse); // Root path (no alphabetic chars)
         expect(CaseIdentifyRegex.isPathCase('/splash'), isTrue);
         expect(CaseIdentifyRegex.isPathCase('/splash.dart'), isTrue);
         expect(CaseIdentifyRegex.isPathCase('/splash.dart/'), isTrue);
@@ -272,6 +272,487 @@ void main() {
         expect(CaseIdentifyRegex.isAnyCase('\$prefix\$key\${user.id}'), isFalse); // Only dynamic variables
         expect(CaseIdentifyRegex.isAnyCase('\$uuid-\${DateTime.now().millisecondsSinceEpoch}.\$ext'), isFalse); // Complex dynamic variables
         expect(CaseIdentifyRegex.isAnyCase('\${name[0].toUpperCase()}.'), isFalse); // Dynamic variable with method call
+      });
+    });
+
+    group('containsBase64', () {
+      test('should detect PEM format certificates', () {
+        const certificate = '''-----BEGIN CERTIFICATE-----
+MIIDQTCCAimgAwIBAgITBmyfz5m/jAo54vB4ikPmljZbyjANBgkqhkiG9w0BAQsF
+ADA5MQswCQYDVQQGEwJVUzEPMA0GA1UEChMGQW1hem9uMRkwFwYDVQQDExBBbWF6
+-----END CERTIFICATE-----''';
+        expect(CaseIdentifyRegex.containsBase64(certificate), isTrue);
+      });
+
+      test('should detect private keys', () {
+        expect(CaseIdentifyRegex.containsBase64('-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKcwgg\n-----END PRIVATE KEY-----'), isTrue);
+        expect(CaseIdentifyRegex.containsBase64('-----BEGIN RSA PRIVATE KEY-----\nkey data\n-----END RSA PRIVATE KEY-----'), isTrue);
+        expect(CaseIdentifyRegex.containsBase64('-----BEGIN EC PRIVATE KEY-----\nkey data\n-----END EC PRIVATE KEY-----'), isTrue);
+      });
+
+      test('should detect long base64 sequences', () {
+        // Real base64 encoded data
+        expect(CaseIdentifyRegex.containsBase64('SGVsbG8gV29ybGQhIFRoaXMgaXMgYSBsb25nZXIgc3RyaW5nIGVuY29kZWQgaW4gYmFzZTY0'), isTrue);
+        expect(CaseIdentifyRegex.containsBase64('eyJuYW1lIjoiSm9obiIsImFnZSI6MzAsImNpdHkiOiJOZXcgWW9yayJ9'), isTrue);
+      });
+
+      test('should not detect normal text as base64', () {
+        expect(CaseIdentifyRegex.containsBase64('Hello World'), isFalse);
+        expect(CaseIdentifyRegex.containsBase64('This is a normal sentence with spaces'), isFalse);
+        expect(CaseIdentifyRegex.containsBase64('camelCaseVariable'), isFalse);
+        expect(CaseIdentifyRegex.containsBase64('snake_case_variable'), isFalse);
+        expect(CaseIdentifyRegex.containsBase64('CONSTANT_CASE_VARIABLE'), isFalse);
+      });
+
+      test('should not detect short alphanumeric sequences as base64', () {
+        expect(CaseIdentifyRegex.containsBase64('ABC123'), isFalse);
+        expect(CaseIdentifyRegex.containsBase64('shortString'), isFalse);
+        expect(CaseIdentifyRegex.containsBase64('Test1234567890'), isFalse);
+      });
+
+      test('should not detect sequences with mostly one character type', () {
+        // All lowercase
+        expect(CaseIdentifyRegex.containsBase64('abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz'), isFalse);
+        // All uppercase
+        expect(CaseIdentifyRegex.containsBase64('ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZ'), isFalse);
+        // All numbers
+        expect(CaseIdentifyRegex.containsBase64('123456789012345678901234567890123456789012345678901234567890'), isFalse);
+      });
+
+      test('should handle the provided certificate example', () {
+        const amazonRootCaPem = '''
+-----BEGIN CERTIFICATE-----
+MIIDQTCCAimgAwIBAgITBmyfz5m/jAo54vB4ikPmljZbyjANBgkqhkiG9w0BAQsF
+ADA5MQswCQYDVQQGEwJVUzEPMA0GA1UEChMGQW1hem9uMRkwFwYDVQQDExBBbWF6
+b24gUm9vdCBDQSAxMB4XDTE1MDUyNjAwMDAwMFoXDTM4MDExNzAwMDAwMFowOTEL
+MAkGA1UEBhMCVVMxDzANBgNVBAoTBkFtYXpvbjEZMBcGA1UEAxMQQW1hem9uIFJv
+b3QgQ0EgMTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBALJ4gHHKeNXj
+ca9HgFB0fW7Y14h29Jlo91ghYPl0hAEvrAIthtOgQ3pOsqTQNroBvo3bSMgHFzZM
+9O6II8c+6zf1tRn4SWiw3te5djgdYZ6k/oI2peVKVuRF4fn9tBb6dNqcmzU5L/qw
+IFAGbHrQgLKm+a/sRxmPUDgH3KKHOVj4utWp+UhnMJbulHheb4mjUcAwhmahRWa6
+VOujw5H5SNz/0egwLX0tdHA114gk957EWW67c4cX8jJGKLhD+rcdqsq08p8kDi1L
+93FcXmn/6pUCyziKrlA4b9v7LWIbxcceVOF34GfID5yHI9Y/QCB/IIDEgEw+OyQm
+jgSubJrIqg0CAwEAAaNCMEAwDwYDVR0TAQH/BAUwAwEB/zAOBgNVHQ8BAf8EBAMC
+AYYwHQYDVR0OBBYEFIQYzIU07LwMlJQuCFmcx7IQTgoIMA0GCSqGSIb3DQEBCwUA
+A4IBAQCY8jdaQZChGsV2USggNiMOruYou6r4lK5IpDB/G/wkjUu0yKGX9rbxenDI
+U5PMCCjjmCXPI6T53iHTfIUJrU6adTrCC2qJeHZERxhlbI1Bjjt/msv0tadQ1wUs
+N+gDS63pYaACbvXy8MWy7Vu33PqUXHeeE6V/Uq2V8viTO96LXFvKWlJbYK8U90vv
+o/ufQJVtMVT8QtPHRh8jrdkPSHCa2XV4cdFyQzR1bldZwgJcJmApzyMZFo6IQ6XU
+5MsI+yMRQ+hDKXJioaldXgjUkK642M4UwtBV8ob2xJNDd2ZhwLnoQdeXeGADbkpy
+rqXRfboQnoZsG4q5WTP468SQvvG5
+-----END CERTIFICATE-----
+-----BEGIN CERTIFICATE-----
+MIIFQTCCAymgAwIBAgITBmyf0pY1hp8KD+WGePhbJruKNzANBgkqhkiG9w0BAQwF
+ADA5MQswCQYDVQQGEwJVUzEPMA0GA1UEChMGQW1hem9uMRkwFwYDVQQDExBBbWF6
+b24gUm9vdCBDQSAyMB4XDTE1MDUyNjAwMDAwMFoXDTQwMDUyNjAwMDAwMFowOTEL
+MAkGA1UEBhMCVVMxDzANBgNVBAoTBkFtYXpvbjEZMBcGA1UEAxMQQW1hem9uIFJv
+b3QgQ0EgMjCCAiIwDQYJKoZIhvcNAQEBBQADggIPADCCAgoCggIBAK2Wny2cSkxK
+gXlRmeyKy2tgURO8TW0G/LAIjd0ZEGrHJgw12MBvIITplLGbhQPDW9tK6Mj4kHbZ
+W0/jTOgGNk3Mmqw9DJArktQGGWCsN0R5hYGCrVo34A3MnaZMUnbqQ523BNFQ9lXg
+1dKmSYXpN+nKfq5clU1Imj+uIFptiJXZNLhSGkOQsL9sBbm2eLfq0OQ6PBJTYv9K
+8nu+NQWpEjTj82R0Yiw9AElaKP4yRLuH3WUnAnE72kr3H9rN9yFVkE8P7K6C4Z9r
+2UXTu/Bfh+08LDmG2j/e7HJV63mjrdvdfLC6HM783k81ds8P+HgfajZRRidhW+me
+z/CiVX18JYpvL7TFz4QuK/0NURBs+18bvBt+xa47mAExkv8LV/SasrlX6avvDXbR
+8O70zoan4G7ptGmh32n2M8ZpLpcTnqWHsFcQgTfJU7O7f/aS0ZzQGPSSbtqDT6Zj
+mUyl+17vIWR6IF9sZIUVyzfpYgwLKhbcAS4y2j5L9Z469hdAlO+ekQiG+r5jqFoz
+7Mt0Q5X5bGlSNscpb/xVA1wf+5+9R+vnSUeVC06JIglJ4PVhHvG/LopyboBZ/1c6
++XUyo05f7O0oYtlNc/LMgRdg7c3r3NunysV+Ar3yVAhU/bQtCSwXVEqY0VThUWcI
+0u1ufm8/0i2BWSlmy5A5lREedCf+3euvAgMBAAGjQjBAMA8GA1UdEwEB/wQFMAMB
+Af8wDgYDVR0PAQH/BAQDAgGGMB0GA1UdDgQWBBSwDPBMMPQFWAJI/TPlUq9LhONm
+UjANBgkqhkiG9w0BAQwFAAOCAgEAqqiAjw54o+Ci1M3m9Zh6O+oAA7CXDpO8Wqj2
+LIxyh6mx/H9z/WNxeKWHWc8w4Q0QshNabYL1auaAn6AFC2jkR2vHat+2/XcycuUY
++gn0oJMsXdKMdYV2ZZAMA3m3MSNjrXiDCYZohMr/+c8mmpJ5581LxedhpxfL86kS
+k5Nrp+gvU5LEYFiwzAJRGFuFjWJZY7attN6a+yb3ACfAXVU3dJnJUH/jWS5E4ywl
+7uxMMne0nxrpS10gxdr9HIcWxkPo1LsmmkVwXqkLN1PiRnsn/eBG8om3zEK2yygm
+btmlyTrIQRNg91CMFa6ybRoVGld45pIq2WWQgj9sAq+uEjonljYE1x2igGOpm/Hl
+urR8FLBOybEfdF849lHqm/osohHUqS0nGkWxr7JOcQ3AWEbWaQbLU8uz/mtBzUF+
+fUwPfHJ5elnNXkoOrJupmHN5fLT0zLm4BwyydFy4x2+IoZCn9Kr5v2c69BoVYh63
+n749sSmvZ6ES8lgQGVMDMBu4Gon2nL2XA46jCfMdiyHxtN/kHNGfZQIG6lzWE7OE
+76KlXIx3KadowGuuQNKotOrN8I1LOJwZmhsoVLiJkO/KdYE+HvJkJMcYr07/R54H
+9jVlpNMKVv/1F2Rs76giJUmTtt8AF9pYfl3uxRuw0dFfIRDH+fO6AgonB8Xx1sfT
+4PsJYGw=
+-----END CERTIFICATE-----
+-----BEGIN CERTIFICATE-----
+MIIBtjCCAVugAwIBAgITBmyf1XSXNmY/Owua2eiedgPySjAKBggqhkjOPQQDAjA5
+MQswCQYDVQQGEwJVUzEPMA0GA1UEChMGQW1hem9uMRkwFwYDVQQDExBBbWF6b24g
+Um9vdCBDQSAzMB4XDTE1MDUyNjAwMDAwMFoXDTQwMDUyNjAwMDAwMFowOTELMAkG
+A1UEBhMCVVMxDzANBgNVBAoTBkFtYXpvbjEZMBcGA1UEAxMQQW1hem9uIFJvb3Qg
+Q0EgMzBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABCmXp8ZBf8ANm+gBG1bG8lKl
+ui2yEujSLtf6ycXYqm0fc4E7O5hrOXwzpcVOho6AF2hiRVd9RFgdszflZwjrZt6j
+QjBAMA8GA1UdEwEB/wQFMAMBAf8wDgYDVR0PAQH/BAQDAgGGMB0GA1UdDgQWBBSr
+ttvXBp43rDCGB5Fwx5zEGbF4wDAKBggqhkjOPQQDAgNJADBGAiEA4IWSoxe3jfkr
+BqWTrBqYaGFy+uGh0PsceGCmQ5nFuMQCIQCcAu/xlJyzlvnrxir4tiz+OpAUFteM
+YyRIHN8wfdVoOw==
+-----END CERTIFICATE-----
+-----BEGIN CERTIFICATE-----
+MIIB8jCCAXigAwIBAgITBmyf18G7EEwpQ+Vxe3ssyBrBDjAKBggqhkjOPQQDAzA5
+MQswCQYDVQQGEwJVUzEPMA0GA1UEChMGQW1hem9uMRkwFwYDVQQDExBBbWF6b24g
+Um9vdCBDQSA0MB4XDTE1MDUyNjAwMDAwMFoXDTQwMDUyNjAwMDAwMFowOTELMAkG
+A1UEBhMCVVMxDzANBgNVBAoTBkFtYXpvbjEZMBcGA1UEAxMQQW1hem9uIFJvb3Qg
+Q0EgNDB2MBAGByqGSM49AgEGBSuBBAAiA2IABNKrijdPo1MN/sGKe0uoe0ZLY7Bi
+9i0b2whxIdIA6GO9mif78DluXeo9pcmBqqNbIJhFXRbb/egQbeOc4OO9X4Ri83Bk
+M6DLJC9wuoihKqB1+IGuYgbEgds5bimwHvouXKNCMEAwDwYDVR0TAQH/BAUwAwEB
+/zAOBgNVHQ8BAf8EBAMCAYYwHQYDVR0OBBYEFNPsxzplbszh2naaVvuc84ZtV+WB
+MAoGCCqGSM49BAMDA2gAMGUCMDqLIfG9fhGt0O9Yli/W651+kI0rz2ZVwyzjKKlw
+CkcO8DdZEv8tmZQoTipPNU0zWgIxAOp1AE47xDqUEpHJWEadIRNyp4iciuRMStuW
+1KyLa2tJElMzrdfkviT8tQp21KW8EA==
+-----END CERTIFICATE-----
+-----BEGIN CERTIFICATE-----
+MIID7zCCAtegAwIBAgIBADANBgkqhkiG9w0BAQsFADCBmDELMAkGA1UEBhMCVVMx
+EDAOBgNVBAgTB0FyaXpvbmExEzARBgNVBAcTClNjb3R0c2RhbGUxJTAjBgNVBAoT
+HFN0YXJmaWVsZCBUZWNobm9sb2dpZXMsIEluYy4xOzA5BgNVBAMTMlN0YXJmaWVs
+ZCBTZXJ2aWNlcyBSb290IENlcnRpZmljYXRlIEF1dGhvcml0eSAtIEcyMB4XDTA5
+MDkwMTAwMDAwMFoXDTM3MTIzMTIzNTk1OVowgZgxCzAJBgNVBAYTAlVTMRAwDgYD
+VQQIEwdBcml6b25hMRMwEQYDVQQHEwpTY290dHNkYWxlMSUwIwYDVQQKExxTdGFy
+ZmllbGQgVGVjaG5vbG9naWVzLCBJbmMuMTswOQYDVQQDEzJTdGFyZmllbGQgU2Vy
+dmljZXMgUm9vdCBDZXJ0aWZpY2F0ZSBBdXRob3JpdHkgLSBHMjCCASIwDQYJKoZI
+hvcNAQEBBQADggEPADCCAQoCggEBANUMOsQq+U7i9b4Zl1+OiFOxHz/Lz58gE20p
+OsgPfTz3a3Y4Y9k2YKibXlwAgLIvWX/2h/klQ4bnaRtSmpDhcePYLQ1Ob/bISdm2
+8xpWriu2dBTrz/sm4xq6HZYuajtYlIlHVv8loJNwU4PahHQUw2eeBGg6345AWh1K
+Ts9DkTvnVtYAcMtS7nt9rjrnvDH5RfbCYM8TWQIrgMw0R9+53pBlbQLPLJGmpufe
+hRhJfGZOozptqbXuNC66DQO4M99H67FrjSXZm86B0UVGMpZwh94CDklDhbZsc7tk
+6mFBrMnUVN+HL8cisibMn1lUaJ/8viovxFUcdUBgF4UCVTmLfwUCAwEAAaNCMEAw
+DwYDVR0TAQH/BAUwAwEB/zAOBgNVHQ8BAf8EBAMCAQYwHQYDVR0OBBYEFJxfAN+q
+AdcwKziIorhtSpzyEZGDMA0GCSqGSIb3DQEBCwUAA4IBAQBLNqaEd2ndOxmfZyMI
+bw5hyf2E3F/YNoHN2BtBLZ9g3ccaaNnRbobhiCPPE95Dz+I0swSdHynVv/heyNXB
+ve6SbzJ08pGCL72CQnqtKrcgfU28elUSwhXqvfdqlS5sdJ/PHLTyxQGjhdByPq1z
+qwubdQxtRbeOlKyWN7Wg0I8VRw7j6IPdj/3vQQF3zCepYoUz8jcI73HPdwbeyBkd
+iEDPfUYd/x7H4c7/I9vG+o1VTqkC50cRRj70/b17KSa7qWFiNyi2LSr2EIZkyXCn
+0q23KXB56jzaYyWf/Wi3MOxw+3WKt21gZ7IeyLnp2KhvAotnDU0mV3HaIPzBSlCN
+sSi6
+-----END CERTIFICATE-----
+''';
+        expect(CaseIdentifyRegex.containsBase64(amazonRootCaPem), isTrue);
+        expect(CaseIdentifyRegex.isAnyCase(amazonRootCaPem), isFalse);
+      });
+    });
+
+    group('containsSha1Key', () {
+      test('should detect SHA1 hashes', () {
+        // Real SHA1 hashes
+        expect(CaseIdentifyRegex.containsSha1Key('2fd4e1c67a2d28fced849ee1bb76e7391b93eb12'), isTrue);
+        expect(CaseIdentifyRegex.containsSha1Key('da39a3ee5e6b4b0d3255bfef95601890afd80709'), isTrue);
+        expect(CaseIdentifyRegex.containsSha1Key('SHA1: 356a192b7913b04c54574d18c28d46e6395428ab'), isTrue);
+        expect(CaseIdentifyRegex.containsSha1Key('"hash": "5d41402abc4b2a76b9719d911017c592"'), isFalse); // Too short (MD5)
+        expect(CaseIdentifyRegex.containsSha1Key('The SHA1 is: aaf4c61ddcc5e8a2dabede0f3b482cd9aea9434d'), isTrue);
+      });
+
+      test('should not detect normal text as SHA1', () {
+        expect(CaseIdentifyRegex.containsSha1Key('Hello World'), isFalse);
+        expect(CaseIdentifyRegex.containsSha1Key('This is a normal sentence'), isFalse);
+        expect(CaseIdentifyRegex.containsSha1Key('1234567890'), isFalse);
+        expect(CaseIdentifyRegex.containsSha1Key('abcdefghijklmnop'), isFalse);
+      });
+
+      test('should not detect repetitive patterns as SHA1', () {
+        expect(CaseIdentifyRegex.containsSha1Key('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'), isFalse);
+        expect(CaseIdentifyRegex.containsSha1Key('0000000000000000000000000000000000000000'), isFalse);
+      });
+
+      test('should not confuse with longer hex strings', () {
+        // SHA256 hash (64 chars) should not be detected as SHA1
+        expect(CaseIdentifyRegex.containsSha1Key('e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'), isFalse);
+      });
+    });
+
+    group('containsSha256Key', () {
+      test('should detect SHA256 hashes', () {
+        expect(CaseIdentifyRegex.containsSha256Key('e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'), isTrue);
+        expect(CaseIdentifyRegex.containsSha256Key('SHA256:d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2'), isTrue);
+        expect(CaseIdentifyRegex.containsSha256Key('"checksum": "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3"'), isTrue);
+      });
+
+      test('should not detect normal text as SHA256', () {
+        expect(CaseIdentifyRegex.containsSha256Key('Hello World'), isFalse);
+        expect(CaseIdentifyRegex.containsSha256Key('This is a longer sentence with more characters'), isFalse);
+        expect(CaseIdentifyRegex.containsSha256Key('1234567890abcdef'), isFalse); // Too short
+      });
+
+      test('should not detect SHA1 as SHA256', () {
+        expect(CaseIdentifyRegex.containsSha256Key('2fd4e1c67a2d28fced849ee1bb76e7391b93eb12'), isFalse); // 40 chars
+      });
+    });
+
+    group('containsSha512Key', () {
+      test('should detect SHA512 hashes', () {
+        const sha512 = 'cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e';
+        expect(CaseIdentifyRegex.containsSha512Key(sha512), isTrue);
+        expect(CaseIdentifyRegex.containsSha512Key('SHA512: ' + sha512), isTrue);
+      });
+
+      test('should not detect shorter hashes as SHA512', () {
+        expect(CaseIdentifyRegex.containsSha512Key('e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'), isFalse); // SHA256
+        expect(CaseIdentifyRegex.containsSha512Key('2fd4e1c67a2d28fced849ee1bb76e7391b93eb12'), isFalse); // SHA1
+      });
+
+      test('should not detect normal text', () {
+        expect(CaseIdentifyRegex.containsSha512Key('This is a very long sentence but it is not a SHA512 hash'), isFalse);
+      });
+    });
+
+    group('containsSha2Key', () {
+      test('should detect all SHA2 family hashes', () {
+        // SHA224 (56 hex)
+        expect(CaseIdentifyRegex.containsSha2Key('d14a028c2a3a2bc9476102bb288234c415a2b01f828ea62ac5b3e42f'), isTrue);
+        // SHA256 (64 hex)
+        expect(CaseIdentifyRegex.containsSha2Key('e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'), isTrue);
+        // SHA384 (96 hex)
+        expect(CaseIdentifyRegex.containsSha2Key('38b060a751ac96384cd9327eb1b1e36a21fdb71114be07434c0cc7bf63f6e1da274edebfe76f65fbd51ad2f14898b95b'), isTrue);
+        // SHA512 (128 hex)
+        expect(CaseIdentifyRegex.containsSha2Key('cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e'), isTrue);
+      });
+
+      test('should not detect SHA1 as SHA2', () {
+        expect(CaseIdentifyRegex.containsSha2Key('2fd4e1c67a2d28fced849ee1bb76e7391b93eb12'), isFalse);
+      });
+
+      test('should not detect normal text', () {
+        expect(CaseIdentifyRegex.containsSha2Key('Hello World'), isFalse);
+      });
+    });
+
+    group('containsRSAKey', () {
+      test('should detect SSH RSA keys', () {
+        expect(CaseIdentifyRegex.containsRSAKey('ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC7'), isTrue);
+        expect(CaseIdentifyRegex.containsRSAKey('ssh-rsa AAAAB3NzaC1yc2E= user@host'), isTrue);
+      });
+
+      test('should detect JWK RSA keys', () {
+        expect(CaseIdentifyRegex.containsRSAKey('{"kty":"RSA","n":"0vx7agoebGcQSuuPiLJXZptN9nndrQmbXEps2aiAFbWhM78LhWx4cbbfAAtV"}'), isTrue);
+        expect(CaseIdentifyRegex.containsRSAKey('{"kty": "RSA", "use": "sig"}'), isTrue);
+      });
+
+      test('should detect RSA key components in JSON', () {
+        expect(CaseIdentifyRegex.containsRSAKey('"modulus": "AQA..."'), isTrue);
+        expect(CaseIdentifyRegex.containsRSAKey('"publicExponent": "AQAB"'), isTrue);
+        expect(CaseIdentifyRegex.containsRSAKey('"privateExponent": "..."'), isTrue);
+      });
+
+      test('should detect PEM RSA headers', () {
+        expect(CaseIdentifyRegex.containsRSAKey('-----BEGIN RSA PRIVATE KEY-----'), isTrue);
+        expect(CaseIdentifyRegex.containsRSAKey('-----BEGIN RSA PUBLIC KEY-----'), isTrue);
+        expect(CaseIdentifyRegex.containsRSAKey('-----BEGIN PUBLIC KEY-----'), isTrue);
+        expect(CaseIdentifyRegex.containsRSAKey('-----BEGIN PRIVATE KEY-----'), isTrue);
+      });
+
+      test('should detect very long hex sequences (RSA modulus)', () {
+        final longHex = 'a' * 512; // 512 hex chars (2048 bits)
+        expect(CaseIdentifyRegex.containsRSAKey(longHex), isTrue);
+      });
+
+      test('should not detect normal text as RSA', () {
+        expect(CaseIdentifyRegex.containsRSAKey('Hello World'), isFalse);
+        expect(CaseIdentifyRegex.containsRSAKey('This is a normal sentence'), isFalse);
+        expect(CaseIdentifyRegex.containsRSAKey('public key authentication'), isFalse); // Contains "public key" but in normal context
+      });
+    });
+
+    group('isAnyCase with cryptographic content', () {
+      test('should reject strings containing SHA1', () {
+        expect(CaseIdentifyRegex.isAnyCase('api_key: 2fd4e1c67a2d28fced849ee1bb76e7391b93eb12'), isFalse);
+      });
+
+      test('should reject strings containing SHA256', () {
+        expect(CaseIdentifyRegex.isAnyCase('checksum: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'), isFalse);
+      });
+
+      test('should reject strings containing SHA512', () {
+        const sha512 = 'cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e';
+        expect(CaseIdentifyRegex.isAnyCase('hash=' + sha512), isFalse);
+      });
+
+      test('should reject strings containing RSA keys', () {
+        expect(CaseIdentifyRegex.isAnyCase('ssh-rsa AAAAB3NzaC1yc2E= user@host'), isFalse);
+        expect(CaseIdentifyRegex.isAnyCase('{"kty":"RSA","n":"..."}'), isFalse);
+      });
+
+      test('should accept normal case strings without cryptographic content', () {
+        expect(CaseIdentifyRegex.isAnyCase('helloWorld'), isTrue); // camelCase
+        expect(CaseIdentifyRegex.isAnyCase('hello_world'), isTrue); // snake_case
+        expect(CaseIdentifyRegex.isAnyCase('HELLO_WORLD'), isTrue); // CONSTANT_CASE
+      });
+    });
+
+    group('containsMD5Hash', () {
+      test('should detect MD5 hashes', () {
+        expect(CaseIdentifyRegex.containsMD5Hash('5d41402abc4b2a76b9719d911017c592'), isTrue);
+        expect(CaseIdentifyRegex.containsMD5Hash('098f6bcd4621d373cade4e832627b4f6'), isTrue);
+        expect(CaseIdentifyRegex.containsMD5Hash('MD5: 5d41402abc4b2a76b9719d911017c592'), isTrue);
+        expect(CaseIdentifyRegex.containsMD5Hash('"hash": "098f6bcd4621d373cade4e832627b4f6"'), isTrue);
+        expect(CaseIdentifyRegex.containsMD5Hash('The MD5 checksum is 21232f297a57a5a743894a0e4a801fc3'), isTrue);
+      });
+
+      test('should not detect normal text as MD5', () {
+        expect(CaseIdentifyRegex.containsMD5Hash('Hello World'), isFalse);
+        expect(CaseIdentifyRegex.containsMD5Hash('This is a test'), isFalse);
+        expect(CaseIdentifyRegex.containsMD5Hash('12345678'), isFalse);
+        expect(CaseIdentifyRegex.containsMD5Hash('abcdefgh'), isFalse);
+      });
+
+      test('should not detect repetitive patterns as MD5', () {
+        expect(CaseIdentifyRegex.containsMD5Hash('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'), isFalse);
+        expect(CaseIdentifyRegex.containsMD5Hash('00000000000000000000000000000000'), isFalse);
+      });
+
+      test('should not confuse with longer hashes', () {
+        // Should not match part of SHA1 (40 chars)
+        expect(CaseIdentifyRegex.containsMD5Hash('2fd4e1c67a2d28fced849ee1bb76e7391b93eb12'), isFalse);
+        // Should not match part of SHA256 (64 chars)
+        expect(CaseIdentifyRegex.containsMD5Hash('e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'), isFalse);
+      });
+
+      test('should detect 32 hex chars as potential MD5', () {
+        // Note: 32 hex chars could be either MD5 or UUID without dashes
+        // The containsUUID function uses context to distinguish them
+        expect(CaseIdentifyRegex.containsMD5Hash('550e8400e29b41d4a716446655440000'), isTrue);
+        // But with uuid context, containsUUID should also detect it
+        expect(CaseIdentifyRegex.containsUUID('uuid: 550e8400e29b41d4a716446655440000'), isTrue);
+      });
+    });
+
+    group('containsJWT', () {
+      test('should detect valid JWTs', () {
+        const jwt1 = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c';
+        expect(CaseIdentifyRegex.containsJWT(jwt1), isTrue);
+        
+        const jwt2 = 'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.POstGetfAytaZS82wHcjoTyoqhMyxXiWdR7Nn7A29DNSl0EiXLdwJ6xC6AfgZWF1bOsS_TuYI3OG85AmiExREkrS6tDfTQ2B3WXlrr-wp5AokiRbz3_oB4OxG-W9KcEEbDRcZc0nH3L7LzYptiy1PtAylQGxHTWZXtGz4ht0bAecBgmpdgXMguEIcoqPJ1n3pIWk_dUZegpqx0Lka21H6XxUTxiy8OcaarA8zdnPUnV6AmNP3ecFawIFYdvJB_cm-GvpCSbr8G8y_Mllj8f4x9nBH8pQux89_6gUY618iYv7tuPWBFfEbLxtF2pZS6YC1aSfLQxeNe8djT9YjpvRZA';
+        expect(CaseIdentifyRegex.containsJWT(jwt2), isTrue);
+        
+        expect(CaseIdentifyRegex.containsJWT('Authorization: Bearer ' + jwt1), isTrue);
+        expect(CaseIdentifyRegex.containsJWT('"token": "' + jwt1 + '"'), isTrue);
+      });
+
+      test('should not detect non-JWT three-part strings', () {
+        expect(CaseIdentifyRegex.containsJWT('hello.world.test'), isFalse); // Too short
+        expect(CaseIdentifyRegex.containsJWT('AAAA.BBBB.CCCC'), isFalse); // No character variety
+        expect(CaseIdentifyRegex.containsJWT('version.1.0'), isFalse); // Too short
+        expect(CaseIdentifyRegex.containsJWT('path.to.file'), isFalse); // Too short
+      });
+
+      test('should not detect normal text as JWT', () {
+        expect(CaseIdentifyRegex.containsJWT('Hello World'), isFalse);
+        expect(CaseIdentifyRegex.containsJWT('This is a sentence with dots.'), isFalse);
+        expect(CaseIdentifyRegex.containsJWT('email@example.com'), isFalse);
+      });
+    });
+
+    group('containsUUID', () {
+      test('should detect standard format UUIDs', () {
+        expect(CaseIdentifyRegex.containsUUID('550e8400-e29b-41d4-a716-446655440000'), isTrue);
+        expect(CaseIdentifyRegex.containsUUID('6ba7b810-9dad-11d1-80b4-00c04fd430c8'), isTrue);
+        expect(CaseIdentifyRegex.containsUUID('id: 550e8400-e29b-41d4-a716-446655440000'), isTrue);
+        expect(CaseIdentifyRegex.containsUUID('"uuid": "6ba7b810-9dad-11d1-80b4-00c04fd430c8"'), isTrue);
+      });
+
+      test('should detect UUIDs without dashes in context', () {
+        expect(CaseIdentifyRegex.containsUUID('uuid: 550e8400e29b41d4a716446655440000'), isTrue);
+        expect(CaseIdentifyRegex.containsUUID('guid=6ba7b8109dad11d180b400c04fd430c8'), isTrue);
+        expect(CaseIdentifyRegex.containsUUID('id: "550e8400e29b41d4a716446655440000"'), isTrue);
+      });
+
+      test('should not detect 32 hex chars without UUID context', () {
+        // Without uuid/guid/id context, 32 hex chars alone shouldn't match
+        expect(CaseIdentifyRegex.containsUUID('550e8400e29b41d4a716446655440000'), isFalse);
+        // MD5 hash should not be detected as UUID
+        expect(CaseIdentifyRegex.containsUUID('5d41402abc4b2a76b9719d911017c592'), isFalse);
+      });
+
+      test('should not detect normal text as UUID', () {
+        expect(CaseIdentifyRegex.containsUUID('Hello World'), isFalse);
+        expect(CaseIdentifyRegex.containsUUID('12345678-1234-1234-1234-123456789012'), isTrue); // Valid UUID format (v1/v4 can have all numbers)
+        expect(CaseIdentifyRegex.containsUUID('this-is-not-a-uuid'), isFalse);
+      });
+
+      test('should handle uppercase and lowercase UUIDs', () {
+        expect(CaseIdentifyRegex.containsUUID('550E8400-E29B-41D4-A716-446655440000'), isTrue);
+        expect(CaseIdentifyRegex.containsUUID('550e8400-E29B-41d4-A716-446655440000'), isTrue); // Mixed case
+      });
+    });
+
+    group('isSuspectToNotBeUserFacingString', () {
+      test('should return false for strings less than 50 characters', () {
+        expect(CaseIdentifyRegex.isSuspectToNotBeUserFacingString('short string'), isFalse);
+        expect(CaseIdentifyRegex.isSuspectToNotBeUserFacingString('no spaces needed here'), isFalse);
+        expect(CaseIdentifyRegex.isSuspectToNotBeUserFacingString('a' * 49), isFalse);
+      });
+
+      test('should return false for empty string', () {
+        expect(CaseIdentifyRegex.isSuspectToNotBeUserFacingString(''), isFalse);
+      });
+
+      test('should return true for 50+ char strings without enough spaces', () {
+        // 50 chars, needs 1 space, has 0
+        expect(CaseIdentifyRegex.isSuspectToNotBeUserFacingString('a' * 50), isTrue);
+        
+        // 100 chars, needs 2 spaces, has 1
+        expect(CaseIdentifyRegex.isSuspectToNotBeUserFacingString('a' * 49 + ' ' + 'b' * 50), isTrue);
+        
+        // 250 chars, needs 5 spaces, has 0
+        expect(CaseIdentifyRegex.isSuspectToNotBeUserFacingString('a' * 250), isTrue);
+      });
+
+      test('should return false for strings with enough spaces', () {
+        // 50 chars, needs 1 space, has 1
+        expect(CaseIdentifyRegex.isSuspectToNotBeUserFacingString('a' * 25 + ' ' + 'b' * 24), isFalse);
+        
+        // 100 chars, needs 2 spaces, has 2
+        expect(CaseIdentifyRegex.isSuspectToNotBeUserFacingString('This is a normal sentence that has enough spaces for the length requirement okay'), isFalse);
+        
+        // 250 chars, needs 5 spaces, has 5+
+        const longUserFriendlyString = 'This is a much longer piece of text that represents ' +
+            'what a user facing string might look like in a real application. ' +
+            'It has proper spacing and punctuation to make it readable. ' +
+            'This kind of string would be displayed to users in the interface.';
+        expect(CaseIdentifyRegex.isSuspectToNotBeUserFacingString(longUserFriendlyString), isFalse);
+      });
+
+      test('should correctly identify keys and tokens as suspect', () {
+        // Base64-like string without spaces
+        expect(CaseIdentifyRegex.isSuspectToNotBeUserFacingString('YWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXowMTIzNDU2Nzg5YWJjZGVmZ2hpams='), isTrue);
+        
+        // Long hex string (like a hash)
+        expect(CaseIdentifyRegex.isSuspectToNotBeUserFacingString('a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456'), isTrue);
+        
+        // JWT-like string
+        expect(CaseIdentifyRegex.isSuspectToNotBeUserFacingString('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ'), isTrue);
+      });
+
+      test('should handle edge cases correctly', () {
+        // Exactly 50 chars with 1 space
+        expect(CaseIdentifyRegex.isSuspectToNotBeUserFacingString('a' * 24 + ' ' + 'b' * 25), isFalse);
+        
+        // 51 chars still needs only 1 space
+        expect(CaseIdentifyRegex.isSuspectToNotBeUserFacingString('a' * 25 + ' ' + 'b' * 25), isFalse);
+        
+        // 99 chars still needs only 1 space
+        expect(CaseIdentifyRegex.isSuspectToNotBeUserFacingString('a' * 49 + ' ' + 'b' * 49), isFalse);
+        
+        // 100 chars needs 2 spaces
+        expect(CaseIdentifyRegex.isSuspectToNotBeUserFacingString('a' * 49 + ' ' + 'b' * 50), isTrue); // only has 1
+        expect(CaseIdentifyRegex.isSuspectToNotBeUserFacingString('a' * 48 + ' ' + 'b' * 49 + ' ' + 'c'), isFalse); // has 2
+      });
+    });
+
+    group('isAnyCase with MD5, JWT, UUID', () {
+      test('should reject strings containing MD5', () {
+        expect(CaseIdentifyRegex.isAnyCase('checksum: 5d41402abc4b2a76b9719d911017c592'), isFalse);
+      });
+
+      test('should reject strings containing JWT', () {
+        const jwt = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c';
+        expect(CaseIdentifyRegex.isAnyCase('token=' + jwt), isFalse);
+      });
+
+      test('should reject strings containing UUID', () {
+        expect(CaseIdentifyRegex.isAnyCase('id: 550e8400-e29b-41d4-a716-446655440000'), isFalse);
+      });
+
+      test('should reject strings that are suspect to not be user facing', () {
+        // Long string without spaces
+        expect(CaseIdentifyRegex.isAnyCase('a' * 100), isFalse);
+        
+        // Long base64-like string
+        expect(CaseIdentifyRegex.isAnyCase('YWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXowMTIzNDU2Nzg5YWJjZGVmZ2hpams='), isFalse);
       });
     });
   });
