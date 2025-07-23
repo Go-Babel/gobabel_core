@@ -24,6 +24,8 @@ void main() {
         expect(CaseIdentifyRegex.isCamelCase('hello world'), isFalse); // Space
         expect(CaseIdentifyRegex.isCamelCase('123hello'), isFalse); // Starts with number
         expect(CaseIdentifyRegex.isCamelCase(''), isFalse); // Empty
+        expect(CaseIdentifyRegex.isCamelCase('orders.dart'), isFalse); // File with .dart extension
+        expect(CaseIdentifyRegex.isCamelCase('session_provider.dart'), isFalse); // File with .dart extension
       });
     });
 
@@ -45,6 +47,8 @@ void main() {
         expect(CaseIdentifyRegex.isPascalCase('Hello-World'), isFalse); // Header-Case
         expect(CaseIdentifyRegex.isPascalCase('123HelloWorld'), isFalse); // Starts with number
         expect(CaseIdentifyRegex.isPascalCase(''), isFalse); // Empty
+        expect(CaseIdentifyRegex.isPascalCase('orders.dart'), isFalse); // File with .dart extension
+        expect(CaseIdentifyRegex.isPascalCase('session_provider.dart'), isFalse); // File with .dart extension
       });
     });
 
@@ -67,6 +71,8 @@ void main() {
         expect(CaseIdentifyRegex.isSnakeCase('_hello_world'), isFalse); // Leading underscore
         expect(CaseIdentifyRegex.isSnakeCase('hello_world_'), isFalse); // Trailing underscore
         expect(CaseIdentifyRegex.isSnakeCase(''), isFalse); // Empty
+        expect(CaseIdentifyRegex.isSnakeCase('orders.dart'), isFalse); // File with .dart extension
+        expect(CaseIdentifyRegex.isSnakeCase('session_provider.dart'), isFalse); // File with .dart extension
       });
     });
 
@@ -88,6 +94,8 @@ void main() {
         expect(CaseIdentifyRegex.isConstantCase('helloWorld'), isFalse); // camelCase
         expect(CaseIdentifyRegex.isConstantCase('_HELLO_WORLD'), isFalse); // Leading underscore
         expect(CaseIdentifyRegex.isConstantCase(''), isFalse); // Empty
+        expect(CaseIdentifyRegex.isConstantCase('orders.dart'), isFalse); // File with .dart extension
+        expect(CaseIdentifyRegex.isConstantCase('session_provider.dart'), isFalse); // File with .dart extension
       });
     });
 
@@ -109,6 +117,8 @@ void main() {
         expect(CaseIdentifyRegex.isParamCase('-hello-world'), isFalse); // Leading dash
         expect(CaseIdentifyRegex.isParamCase('hello-world-'), isFalse); // Trailing dash
         expect(CaseIdentifyRegex.isParamCase(''), isFalse); // Empty
+        expect(CaseIdentifyRegex.isParamCase('orders.dart'), isFalse); // File with .dart extension
+        expect(CaseIdentifyRegex.isParamCase('session_provider.dart'), isFalse); // File with .dart extension
       });
     });
 
@@ -129,6 +139,8 @@ void main() {
         expect(CaseIdentifyRegex.isHeaderCase('HelloWorld'), isFalse); // PascalCase
         expect(CaseIdentifyRegex.isHeaderCase('-Hello-World'), isFalse); // Leading dash
         expect(CaseIdentifyRegex.isHeaderCase(''), isFalse); // Empty
+        expect(CaseIdentifyRegex.isHeaderCase('orders.dart'), isFalse); // File with .dart extension
+        expect(CaseIdentifyRegex.isHeaderCase('session_provider.dart'), isFalse); // File with .dart extension
       });
     });
 
@@ -139,6 +151,7 @@ void main() {
         expect(CaseIdentifyRegex.isDotCase('com.example.app'), isTrue);
         expect(CaseIdentifyRegex.isDotCase('api.v2.users'), isTrue);
         expect(CaseIdentifyRegex.isDotCase('config.dev.local'), isTrue);
+        expect(CaseIdentifyRegex.isDotCase('orders.dart'), isTrue); // File extension is valid dot case
       });
 
       test('should reject invalid dot.case', () {
@@ -149,6 +162,9 @@ void main() {
         expect(CaseIdentifyRegex.isDotCase('.hello.world'), isFalse); // Leading dot
         expect(CaseIdentifyRegex.isDotCase('hello.world.'), isFalse); // Trailing dot
         expect(CaseIdentifyRegex.isDotCase(''), isFalse); // Empty
+        expect(CaseIdentifyRegex.isDotCase('session_provider.dart'), isFalse); // File with underscore and .dart
+        expect(CaseIdentifyRegex.isDotCase('note_provider.g.dart'), isFalse); // Generated file with underscore
+        expect(CaseIdentifyRegex.isDotCase('note_provider.freezed.dart'), isFalse); // Freezed file with underscore
       });
     });
 
@@ -168,6 +184,8 @@ void main() {
         expect(CaseIdentifyRegex.isPascalDotCase('HelloWorld'), isFalse); // PascalCase
         expect(CaseIdentifyRegex.isPascalDotCase('.Hello.World'), isFalse); // Leading dot
         expect(CaseIdentifyRegex.isPascalDotCase(''), isFalse); // Empty
+        expect(CaseIdentifyRegex.isPascalDotCase('orders.dart'), isFalse); // File with .dart extension
+        expect(CaseIdentifyRegex.isPascalDotCase('session_provider.dart'), isFalse); // File with .dart extension
       });
     });
 
@@ -187,6 +205,8 @@ void main() {
         expect(CaseIdentifyRegex.isImportCase('package:'), isFalse); // No path
         expect(CaseIdentifyRegex.isImportCase(':dartz/dartz.dart'), isFalse); // No prefix
         expect(CaseIdentifyRegex.isImportCase(''), isFalse); // Empty
+        expect(CaseIdentifyRegex.isImportCase('orders.dart'), isFalse); // File with .dart extension
+        expect(CaseIdentifyRegex.isImportCase('session_provider.dart'), isFalse); // File with .dart extension
       });
     });
 
@@ -212,6 +232,13 @@ void main() {
         expect(CaseIdentifyRegex.isPathCase('hello'), isFalse); // Single word, no slash
         expect(CaseIdentifyRegex.isPathCase('hello world'), isFalse); // Space
         expect(CaseIdentifyRegex.isPathCase(''), isFalse); // Empty
+        expect(CaseIdentifyRegex.isPathCase('orders.dart'), isFalse); // File with .dart extension but no path
+        expect(CaseIdentifyRegex.isPathCase('session_provider.dart'), isFalse); // File with .dart extension but no path
+        expect(CaseIdentifyRegex.isPathCase('../data/notification_custom.dart'), isFalse); // Relative path with ..
+        expect(CaseIdentifyRegex.isPathCase('../states/selection_state.dart'), isFalse); // Relative path with ..
+        expect(CaseIdentifyRegex.isPathCase('all/\$path/tumb.png'), isFalse); // Path with dollar variable
+        expect(CaseIdentifyRegex.isPathCase('/all/\$path/tumb.png'), isFalse); // Absolute path with dollar variable
+        expect(CaseIdentifyRegex.isPathCase('posts/\$id/video.mp4'), isFalse); // Path with dollar variable
       });
     });
 
@@ -234,6 +261,17 @@ void main() {
         expect(CaseIdentifyRegex.isAnyCase('Hello World'), isFalse); // Space separated
         expect(CaseIdentifyRegex.isAnyCase('123hello'), isFalse); // Invalid start
         expect(CaseIdentifyRegex.isAnyCase(''), isFalse); // Empty
+        expect(CaseIdentifyRegex.isAnyCase('session_provider.dart'), isFalse); // File with .dart extension
+        expect(CaseIdentifyRegex.isAnyCase('../data/notification_custom.dart'), isFalse); // Relative path with file
+        expect(CaseIdentifyRegex.isAnyCase('note_provider.g.dart'), isFalse); // Generated file
+        expect(CaseIdentifyRegex.isAnyCase('note_provider.freezed.dart'), isFalse); // Freezed generated file
+        expect(CaseIdentifyRegex.isAnyCase('../states/selection_state.dart'), isFalse); // Relative path
+        expect(CaseIdentifyRegex.isAnyCase('all/\$path/tumb.png'), isFalse); // Path with variable
+        expect(CaseIdentifyRegex.isAnyCase('/all/\$path/tumb.png'), isFalse); // Absolute path with variable
+        expect(CaseIdentifyRegex.isAnyCase('posts/\$id/video.mp4'), isFalse); // Path with variable
+        expect(CaseIdentifyRegex.isAnyCase('\$prefix\$key\${user.id}'), isFalse); // Only dynamic variables
+        expect(CaseIdentifyRegex.isAnyCase('\$uuid-\${DateTime.now().millisecondsSinceEpoch}.\$ext'), isFalse); // Complex dynamic variables
+        expect(CaseIdentifyRegex.isAnyCase('\${name[0].toUpperCase()}.'), isFalse); // Dynamic variable with method call
       });
     });
   });

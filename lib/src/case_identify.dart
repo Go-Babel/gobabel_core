@@ -44,6 +44,7 @@ class CaseIdentifyRegex {
   /// The FULL TEXT should be in the case you want to identify.
   static bool isCase(String value, String regex) {
     if (value.isEmpty) return false;
+    if (!RegExp(r'[a-zA-Z]').hasMatch(value)) return false;
 
     final regExp = RegExp(regex, multiLine: true);
     final matches = regExp.allMatches(value);
@@ -58,12 +59,7 @@ class CaseIdentifyRegex {
   static bool isConstantCase(String value) => isCase(value, constantCase);
   static bool isDotCase(String value) => isCase(value, dotCase);
   static bool isHeaderCase(String value) => isCase(value, headerCase);
-  static bool isPascalDotCase(String value) {
-    if (!RegExp(r'[a-z]').hasMatch(value))
-      return false; // Must have at least one lowercase
-    return isCase(value, pascalDotCase);
-  }
-
+  static bool isPascalDotCase(String value) => isCase(value, pascalDotCase);
   static bool isPascalCase(String value) => isCase(value, pascalCase);
   static bool isParamCase(String value) => isCase(value, paramCase);
   static bool isSnakeCase(String value) => isCase(value, snakeCase);
