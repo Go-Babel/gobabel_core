@@ -80,41 +80,45 @@ class CaseIdentifyRegex {
       '-----BEGIN EC PRIVATE KEY-----',
       '-----END EC PRIVATE KEY-----',
     ];
-    
+
     for (final marker in pemMarkers) {
       if (value.contains(marker)) {
         return true;
       }
     }
-    
+
     // Check for continuous base64 sequences
     // Base64 uses A-Z, a-z, 0-9, +, /, and = for padding
     // Look for sequences of at least 40 characters that look like base64
     final base64Pattern = RegExp(r'[A-Za-z0-9+/]{40,}={0,2}');
-    
+
     if (base64Pattern.hasMatch(value)) {
       // Additional check: if we found a long base64-like sequence,
       // verify it's not just a normal word by checking character distribution
       final match = base64Pattern.firstMatch(value)!.group(0)!;
-      
+
       // Count different character types
       final upperCount = RegExp(r'[A-Z]').allMatches(match).length;
       final lowerCount = RegExp(r'[a-z]').allMatches(match).length;
       final digitCount = RegExp(r'[0-9]').allMatches(match).length;
       final specialCount = RegExp(r'[+/]').allMatches(match).length;
-      
+
       // Base64 typically has a good mix of upper, lower, and digits
       // If it's mostly one type, it's probably not base64
       final total = match.length;
-      final maxRatio = [upperCount, lowerCount, digitCount].map((c) => c / total).reduce((a, b) => a > b ? a : b);
-      
+      final maxRatio = [
+        upperCount,
+        lowerCount,
+        digitCount,
+      ].map((c) => c / total).reduce((a, b) => a > b ? a : b);
+
       // If any character type dominates (>70%), it's probably not base64
       // Also check if it has at least some digits or special chars
       if (maxRatio < 0.7 && (digitCount > 0 || specialCount > 0)) {
         return true;
       }
     }
-    
+
     return false;
   }
 
@@ -127,7 +131,7 @@ class CaseIdentifyRegex {
       r'(?:^|[^a-fA-F0-9])([a-fA-F0-9]{40})(?:[^a-fA-F0-9]|$)',
       caseSensitive: false,
     );
-    
+
     if (sha1Pattern.hasMatch(value)) {
       // Additional check: if it's all the same character, it's probably not a real hash
       final match = sha1Pattern.firstMatch(value)!.group(1)!;
@@ -136,7 +140,7 @@ class CaseIdentifyRegex {
         return true;
       }
     }
-    
+
     return false;
   }
 
@@ -144,17 +148,19 @@ class CaseIdentifyRegex {
   /// SHA2 includes SHA224 (56 hex), SHA256 (64 hex), SHA384 (96 hex), SHA512 (128 hex).
   static bool containsSha2Key(String value) {
     // Check for any SHA2 variant
-    return containsSha256Key(value) || containsSha512Key(value) || 
-           _containsSha224Key(value) || _containsSha384Key(value);
+    return containsSha256Key(value) ||
+        containsSha512Key(value) ||
+        _containsSha224Key(value) ||
+        _containsSha384Key(value);
   }
-  
+
   // Helper for SHA224 (56 hex chars)
   static bool _containsSha224Key(String value) {
     final sha224Pattern = RegExp(
       r'(?:^|[^a-fA-F0-9])([a-fA-F0-9]{56})(?:[^a-fA-F0-9]|$)',
       caseSensitive: false,
     );
-    
+
     if (sha224Pattern.hasMatch(value)) {
       final match = sha224Pattern.firstMatch(value)!.group(1)!;
       final firstChar = match[0];
@@ -164,14 +170,14 @@ class CaseIdentifyRegex {
     }
     return false;
   }
-  
+
   // Helper for SHA384 (96 hex chars)
   static bool _containsSha384Key(String value) {
     final sha384Pattern = RegExp(
       r'(?:^|[^a-fA-F0-9])([a-fA-F0-9]{96})(?:[^a-fA-F0-9]|$)',
       caseSensitive: false,
     );
-    
+
     if (sha384Pattern.hasMatch(value)) {
       final match = sha384Pattern.firstMatch(value)!.group(1)!;
       final firstChar = match[0];
@@ -189,7 +195,7 @@ class CaseIdentifyRegex {
       r'(?:^|[^a-fA-F0-9])([a-fA-F0-9]{64})(?:[^a-fA-F0-9]|$)',
       caseSensitive: false,
     );
-    
+
     if (sha256Pattern.hasMatch(value)) {
       final match = sha256Pattern.firstMatch(value)!.group(1)!;
       final firstChar = match[0];
@@ -197,7 +203,7 @@ class CaseIdentifyRegex {
         return true;
       }
     }
-    
+
     return false;
   }
 
@@ -208,7 +214,7 @@ class CaseIdentifyRegex {
       r'(?:^|[^a-fA-F0-9])([a-fA-F0-9]{128})(?:[^a-fA-F0-9]|$)',
       caseSensitive: false,
     );
-    
+
     if (sha512Pattern.hasMatch(value)) {
       final match = sha512Pattern.firstMatch(value)!.group(1)!;
       final firstChar = match[0];
@@ -216,7 +222,7 @@ class CaseIdentifyRegex {
         return true;
       }
     }
-    
+
     return false;
   }
 
@@ -227,12 +233,12 @@ class CaseIdentifyRegex {
     if (value.contains('ssh-rsa ')) {
       return true;
     }
-    
+
     // JWK RSA key indicators
     if (value.contains('"kty":"RSA"') || value.contains('"kty": "RSA"')) {
       return true;
     }
-    
+
     // Common RSA key property names in JSON
     final rsaJsonPattern = RegExp(
       r'"(?:modulus|publicExponent|privateExponent|prime1|prime2|exponent1|exponent2|coefficient)"\s*:',
@@ -240,7 +246,7 @@ class CaseIdentifyRegex {
     if (rsaJsonPattern.hasMatch(value)) {
       return true;
     }
-    
+
     // RSA key headers in various formats (some covered by containsBase64)
     final rsaHeaders = [
       'RSA PRIVATE KEY',
@@ -248,19 +254,19 @@ class CaseIdentifyRegex {
       'PUBLIC KEY',
       'PRIVATE KEY',
     ];
-    
+
     for (final header in rsaHeaders) {
       if (value.contains(header)) {
         return true;
       }
     }
-    
+
     // Look for very long hex sequences that might be RSA modulus (typically 2048+ bits = 512+ hex chars)
     final longHexPattern = RegExp(r'[a-fA-F0-9]{512,}');
     if (longHexPattern.hasMatch(value)) {
       return true;
     }
-    
+
     return false;
   }
 
@@ -271,7 +277,7 @@ class CaseIdentifyRegex {
       r'(?:^|[^a-fA-F0-9])([a-fA-F0-9]{32})(?:[^a-fA-F0-9]|$)',
       caseSensitive: false,
     );
-    
+
     if (md5Pattern.hasMatch(value)) {
       final match = md5Pattern.firstMatch(value)!.group(1)!;
       final firstChar = match[0];
@@ -286,7 +292,7 @@ class CaseIdentifyRegex {
         return fullPattern.hasMatch(value);
       }
     }
-    
+
     return false;
   }
 
@@ -298,21 +304,23 @@ class CaseIdentifyRegex {
     final jwtPattern = RegExp(
       r'(?:^|[^A-Za-z0-9_-])([A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+)(?:[^A-Za-z0-9_-]|$)',
     );
-    
+
     if (jwtPattern.hasMatch(value)) {
       final match = jwtPattern.firstMatch(value)!.group(1)!;
       final parts = match.split('.');
-      
+
       // Basic validation: each part should have reasonable length
       // Header and payload are usually at least 20 chars, signature varies
-      if (parts[0].length >= 20 && parts[1].length >= 20 && parts[2].length >= 20) {
+      if (parts[0].length >= 20 &&
+          parts[1].length >= 20 &&
+          parts[2].length >= 20) {
         // Additional check: try to detect if it looks like base64url
         // (has good mix of characters, not all uppercase/lowercase)
         for (final part in parts) {
           final hasUpper = RegExp(r'[A-Z]').hasMatch(part);
           final hasLower = RegExp(r'[a-z]').hasMatch(part);
           final hasDigit = RegExp(r'[0-9]').hasMatch(part);
-          
+
           // Real JWTs typically have mix of character types
           if (hasUpper && hasLower && hasDigit) {
             return true;
@@ -320,7 +328,7 @@ class CaseIdentifyRegex {
         }
       }
     }
-    
+
     return false;
   }
 
@@ -332,17 +340,17 @@ class CaseIdentifyRegex {
       r'(?:^|[^a-fA-F0-9-])([a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12})(?:[^a-fA-F0-9-]|$)',
       caseSensitive: false,
     );
-    
+
     if (uuidPattern.hasMatch(value)) {
       return true;
     }
-    
+
     // Also check for UUID without dashes (some systems store them this way)
     final uuidNoDashPattern = RegExp(
       r'(?:^|[^a-fA-F0-9])([a-fA-F0-9]{32})(?:[^a-fA-F0-9]|$)',
       caseSensitive: false,
     );
-    
+
     if (uuidNoDashPattern.hasMatch(value)) {
       final match = uuidNoDashPattern.firstMatch(value)!.group(1)!;
       // Additional heuristic: UUIDs often appear in specific contexts
@@ -355,7 +363,7 @@ class CaseIdentifyRegex {
         return true;
       }
     }
-    
+
     return false;
   }
 
@@ -365,34 +373,131 @@ class CaseIdentifyRegex {
   /// Example: A 250-character string should have at least 5 spaces.
   static bool isSuspectToNotBeUserFacingString(String value) {
     if (value.isEmpty) return false;
-    
+
     // Calculate required spaces based on string length
     final requiredSpaces = value.length ~/ 50;
-    
+
     // If string is less than 50 chars, no spaces required
     if (requiredSpaces == 0) return false;
-    
+
     // Count actual spaces in the string
     final actualSpaces = value.split(' ').length - 1;
-    
+
     // If actual spaces are less than required, it's suspect
     return actualSpaces < requiredSpaces;
   }
 
-  static bool isAnyCase(String value) {
-    // Check if it contains cryptographic content
-    if (containsBase64(value) || 
-        containsSha1Key(value) ||
-        containsSha2Key(value) || // This includes SHA224, SHA256, SHA384, SHA512
-        containsRSAKey(value) ||
-        containsMD5Hash(value) ||
-        containsJWT(value) ||
-        containsUUID(value) ||
-        isSuspectToNotBeUserFacingString(value)) {
-      return false;
-    }
+  /// Detects if a string is a file reference (but not a valid path).
+  /// This handles cases like:
+  /// - Simple file names: session_provider.dart
+  /// - Generated files: note_provider.g.dart, note_provider.freezed.dart
+  /// - Variable interpolations: $prefix$key${user.id}
+  /// - Relative paths with ../
+  /// - Paths with $ variables
+  static bool isFileReference(String value) {
+    if (value.isEmpty) return false;
     
-    return isImportCase(value) ||
+    // Check if it's already a valid path case (without special characters)
+    if (isPathCase(value)) return false;
+    
+    // Check for relative paths starting with ../
+    if (value.startsWith('../')) return true;
+    
+    // Check for paths containing $ variables
+    if (RegExp(r'[\/\\]').hasMatch(value) && RegExp(r'\$').hasMatch(value)) return true;
+    
+    // Check for file extensions
+    if (containsFileReference(value)) return true;
+    
+    // Check for variable interpolations (e.g., $prefix$key${user.id})
+    if (RegExp(r'\$').hasMatch(value)) return true;
+    
+    return false;
+  }
+
+  /// Detects if a string contains programming-related file references.
+  /// This includes:
+  /// - Dart file names (*.dart)
+  /// - Generated file patterns (*.g.dart, *.freezed.dart, *.pb.dart)
+  /// - Package imports with file extensions (package:...*.dart)
+  /// - Common programming file extensions
+  static bool containsFileReference(String value) {
+    // Check for Dart-specific file patterns
+    if (value.endsWith('.dart')) {
+      return true;
+    }
+
+    // Check for common generated file patterns
+    final generatedPatterns = [
+      RegExp(r'\.g\.\w+$'), // .g.dart, .g.json, etc.
+      RegExp(r'\.freezed\.\w+$'), // .freezed.dart
+      RegExp(r'\.pb\.\w+$'), // .pb.dart (protobuf)
+      RegExp(r'\.pbenum\.\w+$'), // .pbenum.dart
+      RegExp(r'\.pbgrpc\.\w+$'), // .pbgrpc.dart
+      RegExp(r'\.pbjson\.\w+$'), // .pbjson.dart
+    ];
+
+    for (final pattern in generatedPatterns) {
+      if (pattern.hasMatch(value)) {
+        return true;
+      }
+    }
+
+    // Check for common programming file extensions
+    final programmingExtensions = [
+      '.js',
+      '.ts',
+      '.jsx',
+      '.tsx',
+      '.py',
+      '.rb',
+      '.go',
+      '.rs',
+      '.java',
+      '.kt',
+      '.swift',
+      '.m',
+      '.h',
+      '.cpp',
+      '.c',
+      '.cs',
+      '.php',
+      '.lua',
+      '.sh',
+      '.bash',
+      '.zsh',
+      '.fish',
+      '.ps1',
+      '.bat',
+      '.cmd',
+      '.json',
+      '.xml',
+      '.yaml',
+      '.yml',
+      '.toml',
+      '.ini',
+      '.conf',
+      '.md',
+      '.rst',
+      '.txt',
+      '.log',
+      '.sql',
+      '.graphql',
+      '.proto',
+    ];
+
+    for (final ext in programmingExtensions) {
+      if (value.endsWith(ext)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  static bool isAnyCase(String value) {
+    return containsBase64(value) ||
+        isImportCase(value) ||
         isCamelCase(value) ||
         isConstantCase(value) ||
         isDotCase(value) ||
@@ -401,6 +506,16 @@ class CaseIdentifyRegex {
         isPascalDotCase(value) ||
         isParamCase(value) ||
         isPathCase(value) ||
-        isSnakeCase(value);
+        isSnakeCase(value) ||
+        containsSha1Key(value) ||
+        // This includes SHA224, SHA256, SHA384, SHA512
+        containsSha2Key(value) ||
+        containsRSAKey(value) ||
+        containsMD5Hash(value) ||
+        containsJWT(value) ||
+        containsUUID(value) ||
+        isSuspectToNotBeUserFacingString(value) ||
+        containsFileReference(value) ||
+        isFileReference(value);
   }
 }
