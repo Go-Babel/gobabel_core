@@ -13,7 +13,7 @@ import 'package:gobabel_core/gobabel_core.dart';
 /// @return A list of maps, each representing a manageable group for API requests
 List<Map<String, String>> splitIntoManageableGroupsForApi(
   Map<String, String> inputMap, [
-  int? multiplier,
+  double? multiplier,
 ]) {
   final refMultiplier = multiplier ?? kRequestMaxKeyMultiplaier;
   if (inputMap.isEmpty) return [];
