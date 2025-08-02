@@ -15,3 +15,6 @@ typedef ShaCommit = String;
 typedef ChangedFilePath = String;
 typedef NewString = String;
 typedef AppearencesCount = int;
+typedef ReviewSessionUuid = String;
+typedef IsUserFacingString = bool;
+typedef AiGeneratedIsUserFacingString = bool;

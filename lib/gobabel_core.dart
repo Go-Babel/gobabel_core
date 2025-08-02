@@ -10,7 +10,9 @@ export 'src/models/label_locale.dart';
 export 'src/typedefs.dart';
 export 'src/usecases/garantee_uniqueness_of_keys.dart';
 export 'src/usecases/generate_babel_class.dart';
+export 'src/usecases/generate_sha_1.dart';
 export 'src/usecases/infer_declaration_function_by_arb_value.dart';
+export 'src/usecases/should_automatically_be_considered_a_valid_string.dart';
 
 typedef VariableName = String;
 typedef VariableContent = String;
