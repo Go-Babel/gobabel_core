@@ -1,4 +1,5 @@
 import 'dart:io';
+
 import 'package:path/path.dart' as p;
 
 class FolderInfo {
@@ -90,9 +91,9 @@ List<CodeBaseFolder> buildFolderTreeFromListOfFiles(Set<String> filePaths) {
   // Process each file path
   for (final filePath in filePaths) {
     // Split the path into parts (directories and file name)
-    final parts = filePath.split('/');
+    final parts = p.split(filePath);
 
-    // Skip if the path doesn’t contain at least one directory and a file
+    // Skip if the path doesn't contain at least one directory and a file
     if (parts.length < 2) continue;
 
     // Extract directories (exclude the file name)
