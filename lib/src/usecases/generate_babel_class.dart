@@ -24,7 +24,7 @@ String generateBabelClass({
 }
 
 final babelText =
-    r'''// ignore_for_file: sort_constructors_first, unused_element, depend_on_referenced_packages, strict_raw_type, omit_obvious_property_types
+    r'''// ignore_for_file: sort_constructors_first, unused_element, depend_on_referenced_packages, strict_raw_type, omit_obvious_property_types, unintended_html_in_doc_comment, always_put_control_body_on_new_line
 import 'dart:async';
 import 'dart:convert';
 import 'dart:isolate';
@@ -99,8 +99,8 @@ class BabelSupportedLocales {
 
   factory BabelSupportedLocales.fromMap(Map map) {
     return BabelSupportedLocales.fromLocale(
-      map['languageCode'],
-      map['countryCode'],
+      map['languageCode'] as String,
+      map['countryCode'] as String,
     )!;
   }
 
@@ -1405,7 +1405,7 @@ class Babel {
       } else if (streamedResponse.statusCode == 202) {
         // 202 Accepted means the file is still being processed
         // Wait a bit and retry
-        await Future.delayed(const Duration(seconds: 2));
+        await Future<void>.delayed(const Duration(seconds: 2));
 
         // Retry the request
         return _downloadArb(downloadLink);
