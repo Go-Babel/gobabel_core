@@ -20,8 +20,7 @@ class CaseIdentifyRegex {
   // If you wan't without end suffix optional (ex: .dart), use: (?<!\w)\w{1,}(?:\/\w+){1,}\/?(?!\w)
 
   static const String importCase = r'^\w+:(?:[\w/\.]+)$';
-  static const String pathCase =
-      r'^(?:'
+  static const String pathCase = r'^(?:'
       r'[\/]$|' // Just /
       r'[\/][\w-]+(?:\.[\w]+)?[\/]?|' // /splash, /splash.dart, /splash.dart/
       r'[\/][\w-]+(?:[\/][\w-]+)*(?:\.[\w]+)?[\/]?|' // /home/user/documents
@@ -31,7 +30,8 @@ class CaseIdentifyRegex {
   static const String camelCase = r'^[a-z][a-z0-9]*([A-Z][a-zA-Z0-9]*)+$';
   static const String constantCase =
       r'(?<!\w)[A-Z0-9]{1,}(?:_[A-Z0-9]+){1,}(?!\w)';
-  static const String dotCase = r'(?<!\w)[a-z0-9]{1,}(?:\.[a-z0-9]+){1,}(?!\w)';
+  static const String dotCase =
+      r'^(?<!\w)[a-z0-9]{1,}(?:\.[a-z0-9]+){1,}(?!\w)$';
   static const String headerCase = r'^[A-Z][a-z0-9]*(-[A-Z][a-z0-9]*)+$';
   static const String pascalDotCase =
       r'^[A-Z][a-zA-Z0-9]*(?:\.[A-Z][a-zA-Z0-9]*)+$';
@@ -396,22 +396,23 @@ class CaseIdentifyRegex {
   /// - Paths with $ variables
   static bool isFileReference(String value) {
     if (value.isEmpty) return false;
-    
+
     // Check if it's already a valid path case (without special characters)
     if (isPathCase(value)) return false;
-    
+
     // Check for relative paths starting with ../
     if (value.startsWith('../')) return true;
-    
+
     // Check for paths containing $ variables
-    if (RegExp(r'[\/\\]').hasMatch(value) && RegExp(r'\$').hasMatch(value)) return true;
-    
+    if (RegExp(r'[\/\\]').hasMatch(value) && RegExp(r'\$').hasMatch(value))
+      return true;
+
     // Check for file extensions
     if (containsFileReference(value)) return true;
-    
+
     // Check for variable interpolations (e.g., $prefix$key${user.id})
     if (RegExp(r'\$').hasMatch(value)) return true;
-    
+
     return false;
   }
 
@@ -495,6 +496,20 @@ class CaseIdentifyRegex {
     return false;
   }
 
+  /// Detects if a string looks like a Firebase App ID.
+  /// Firebase App IDs follow the pattern: numeric:numeric:platform:alphanumeric
+  /// Examples:
+  /// - 1:515286619892:web:2630b144e9f5abe26630a1
+  /// - 1:624574984834:web:33d55a9ff038e16d72ba9b
+  /// - 1:515286619892:ios:7713b8c61ad139b56630a1
+  /// - 1:515286619892:android:c9ebb42700dfc53f6630a1
+  static bool isFirebaseAppIdLike(String value) {
+    if (value.isEmpty) return false;
+    
+    final firebaseAppIdPattern = RegExp(r'^[a-zA-Z0-9:]+$');
+    return firebaseAppIdPattern.hasMatch(value);
+  }
+
   static bool isAnyCase(String value) {
     return containsBase64(value) ||
         isImportCase(value) ||
@@ -516,6 +531,7 @@ class CaseIdentifyRegex {
         containsUUID(value) ||
         isSuspectToNotBeUserFacingString(value) ||
         containsFileReference(value) ||
-        isFileReference(value);
+        isFileReference(value) ||
+        isFirebaseAppIdLike(value);
   }
 }

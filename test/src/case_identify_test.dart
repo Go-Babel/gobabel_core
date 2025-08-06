@@ -1594,5 +1594,166 @@ sSi6
         );
       });
     });
+
+    group('isFirebaseAppIdLike', () {
+      test('should identify valid Firebase App IDs', () {
+        // Web platform Firebase App IDs
+        expect(
+          CaseIdentifyRegex.isFirebaseAppIdLike(
+            '1:515286619892:web:2630b144e9f5abe26630a1',
+          ),
+          isTrue,
+        );
+        expect(
+          CaseIdentifyRegex.isFirebaseAppIdLike(
+            '1:624574984834:web:33d55a9ff038e16d72ba9b',
+          ),
+          isTrue,
+        );
+        
+        // iOS platform Firebase App IDs
+        expect(
+          CaseIdentifyRegex.isFirebaseAppIdLike(
+            '1:515286619892:ios:7713b8c61ad139b56630a1',
+          ),
+          isTrue,
+        );
+        
+        // Android platform Firebase App IDs
+        expect(
+          CaseIdentifyRegex.isFirebaseAppIdLike(
+            '1:515286619892:android:c9ebb42700dfc53f6630a1',
+          ),
+          isTrue,
+        );
+        
+        // Other valid patterns with alphanumeric and colons
+        expect(
+          CaseIdentifyRegex.isFirebaseAppIdLike('ABC123:def456:GHI:789jkl'),
+          isTrue,
+        );
+        expect(
+          CaseIdentifyRegex.isFirebaseAppIdLike('a:b:c:d:e:f'),
+          isTrue,
+        );
+        expect(
+          CaseIdentifyRegex.isFirebaseAppIdLike('123:456:789'),
+          isTrue,
+        );
+      });
+
+      test('should reject invalid Firebase App ID patterns', () {
+        // Empty string
+        expect(CaseIdentifyRegex.isFirebaseAppIdLike(''), isFalse);
+        
+        // Contains spaces
+        expect(
+          CaseIdentifyRegex.isFirebaseAppIdLike(
+            '1:515286619892:web:2630b144e9f5abe2 6630a1',
+          ),
+          isFalse,
+        );
+        
+        // Contains special characters other than colon
+        expect(
+          CaseIdentifyRegex.isFirebaseAppIdLike(
+            '1:515286619892:web:2630b144e9f5abe2-6630a1',
+          ),
+          isFalse,
+        );
+        expect(
+          CaseIdentifyRegex.isFirebaseAppIdLike(
+            '1:515286619892:web:2630b144e9f5abe2_6630a1',
+          ),
+          isFalse,
+        );
+        expect(
+          CaseIdentifyRegex.isFirebaseAppIdLike(
+            '1:515286619892:web:2630b144e9f5abe2.6630a1',
+          ),
+          isFalse,
+        );
+        
+        // Contains slash
+        expect(
+          CaseIdentifyRegex.isFirebaseAppIdLike(
+            '1:515286619892:web/2630b144e9f5abe26630a1',
+          ),
+          isFalse,
+        );
+        
+        // Contains brackets or parentheses
+        expect(
+          CaseIdentifyRegex.isFirebaseAppIdLike(
+            '1:515286619892:[web]:2630b144e9f5abe26630a1',
+          ),
+          isFalse,
+        );
+        expect(
+          CaseIdentifyRegex.isFirebaseAppIdLike(
+            '1:515286619892:(web):2630b144e9f5abe26630a1',
+          ),
+          isFalse,
+        );
+        
+        // Contains quotes
+        expect(
+          CaseIdentifyRegex.isFirebaseAppIdLike(
+            '"1:515286619892:web:2630b144e9f5abe26630a1"',
+          ),
+          isFalse,
+        );
+        expect(
+          CaseIdentifyRegex.isFirebaseAppIdLike(
+            "'1:515286619892:web:2630b144e9f5abe26630a1'",
+          ),
+          isFalse,
+        );
+        
+        // Contains equals sign
+        expect(
+          CaseIdentifyRegex.isFirebaseAppIdLike(
+            'appId=1:515286619892:web:2630b144e9f5abe26630a1',
+          ),
+          isFalse,
+        );
+        
+        // URL-like patterns (should fail due to slashes)
+        expect(
+          CaseIdentifyRegex.isFirebaseAppIdLike(
+            'https://firebase.com/1:515286619892:web:2630b144e9f5abe26630a1',
+          ),
+          isFalse,
+        );
+      });
+
+      test('should be included in isAnyCase', () {
+        // Valid Firebase App IDs should be detected by isAnyCase
+        expect(
+          CaseIdentifyRegex.isAnyCase(
+            '1:515286619892:web:2630b144e9f5abe26630a1',
+          ),
+          isTrue,
+        );
+        expect(
+          CaseIdentifyRegex.isAnyCase(
+            '1:624574984834:web:33d55a9ff038e16d72ba9b',
+          ),
+          isTrue,
+        );
+        expect(
+          CaseIdentifyRegex.isAnyCase(
+            '1:515286619892:ios:7713b8c61ad139b56630a1',
+          ),
+          isTrue,
+        );
+        expect(
+          CaseIdentifyRegex.isAnyCase(
+            '1:515286619892:android:c9ebb42700dfc53f6630a1',
+          ),
+          isTrue,
+        );
+      });
+    });
   });
 }
