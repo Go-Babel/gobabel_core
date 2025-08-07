@@ -1610,7 +1610,7 @@ sSi6
           ),
           isTrue,
         );
-        
+
         // iOS platform Firebase App IDs
         expect(
           CaseIdentifyRegex.isFirebaseAppIdLike(
@@ -1618,7 +1618,7 @@ sSi6
           ),
           isTrue,
         );
-        
+
         // Android platform Firebase App IDs
         expect(
           CaseIdentifyRegex.isFirebaseAppIdLike(
@@ -1626,7 +1626,7 @@ sSi6
           ),
           isTrue,
         );
-        
+
         // Other valid patterns with alphanumeric and colons
         expect(
           CaseIdentifyRegex.isFirebaseAppIdLike('ABC123:def456:GHI:789jkl'),
@@ -1645,7 +1645,7 @@ sSi6
       test('should reject invalid Firebase App ID patterns', () {
         // Empty string
         expect(CaseIdentifyRegex.isFirebaseAppIdLike(''), isFalse);
-        
+
         // Contains spaces
         expect(
           CaseIdentifyRegex.isFirebaseAppIdLike(
@@ -1653,7 +1653,7 @@ sSi6
           ),
           isFalse,
         );
-        
+
         // Contains special characters other than colon
         expect(
           CaseIdentifyRegex.isFirebaseAppIdLike(
@@ -1673,7 +1673,7 @@ sSi6
           ),
           isFalse,
         );
-        
+
         // Contains slash
         expect(
           CaseIdentifyRegex.isFirebaseAppIdLike(
@@ -1681,7 +1681,7 @@ sSi6
           ),
           isFalse,
         );
-        
+
         // Contains brackets or parentheses
         expect(
           CaseIdentifyRegex.isFirebaseAppIdLike(
@@ -1695,7 +1695,7 @@ sSi6
           ),
           isFalse,
         );
-        
+
         // Contains quotes
         expect(
           CaseIdentifyRegex.isFirebaseAppIdLike(
@@ -1709,7 +1709,7 @@ sSi6
           ),
           isFalse,
         );
-        
+
         // Contains equals sign
         expect(
           CaseIdentifyRegex.isFirebaseAppIdLike(
@@ -1717,7 +1717,7 @@ sSi6
           ),
           isFalse,
         );
-        
+
         // URL-like patterns (should fail due to slashes)
         expect(
           CaseIdentifyRegex.isFirebaseAppIdLike(
@@ -1753,6 +1753,56 @@ sSi6
           ),
           isTrue,
         );
+      });
+    });
+
+    group('isOnlyNumber', () {
+      test('should identify valid numbers', () {
+        expect(CaseIdentifyRegex.isOnlyNumber('123'), isTrue);
+        expect(CaseIdentifyRegex.isOnlyNumber('0'), isTrue);
+        expect(CaseIdentifyRegex.isOnlyNumber('42'), isTrue);
+        expect(CaseIdentifyRegex.isOnlyNumber('1000'), isTrue);
+        expect(CaseIdentifyRegex.isOnlyNumber('999999999'), isTrue);
+        expect(CaseIdentifyRegex.isOnlyNumber('007'), isTrue); // Leading zeros
+      });
+
+      test('should reject non-numeric strings', () {
+        expect(CaseIdentifyRegex.isOnlyNumber('hello'), isFalse);
+        expect(CaseIdentifyRegex.isOnlyNumber('abc123'), isFalse); // Mixed
+        expect(CaseIdentifyRegex.isOnlyNumber('123abc'), isFalse); // Mixed
+        expect(CaseIdentifyRegex.isOnlyNumber('12a34'),
+            isFalse); // Letter in middle
+        expect(
+            CaseIdentifyRegex.isOnlyNumber('1.23'), isFalse); // Decimal point
+        expect(CaseIdentifyRegex.isOnlyNumber('1,234'), isFalse); // Comma
+        expect(
+            CaseIdentifyRegex.isOnlyNumber('-123'), isFalse); // Negative sign
+        expect(CaseIdentifyRegex.isOnlyNumber('+123'), isFalse); // Plus sign
+        expect(CaseIdentifyRegex.isOnlyNumber('123.0'), isFalse); // Decimal
+        expect(CaseIdentifyRegex.isOnlyNumber('1e10'),
+            isFalse); // Scientific notation
+        expect(CaseIdentifyRegex.isOnlyNumber('0x123'), isFalse); // Hex prefix
+        expect(CaseIdentifyRegex.isOnlyNumber('123%'), isFalse); // Percent sign
+        expect(CaseIdentifyRegex.isOnlyNumber(''), isFalse); // Empty string
+        expect(CaseIdentifyRegex.isOnlyNumber(' '), isFalse); // Space
+        expect(CaseIdentifyRegex.isOnlyNumber('123 456'),
+            isFalse); // Space between
+      });
+
+      test('should be included in isAnyCase for valid numbers', () {
+        expect(CaseIdentifyRegex.isAnyCase('123'), isTrue);
+        expect(CaseIdentifyRegex.isAnyCase('0'), isTrue);
+        expect(CaseIdentifyRegex.isAnyCase('999999999'), isTrue);
+      });
+
+      test('should not be confused with other case types', () {
+        // These should be detected as their respective cases, not as numbers
+        expect(CaseIdentifyRegex.isOnlyNumber('hello_world'), isFalse);
+        expect(CaseIdentifyRegex.isOnlyNumber('HELLO_WORLD'), isFalse);
+        expect(CaseIdentifyRegex.isOnlyNumber('helloWorld'), isFalse);
+        expect(CaseIdentifyRegex.isOnlyNumber('HelloWorld'), isFalse);
+        expect(CaseIdentifyRegex.isOnlyNumber('hello-world'), isFalse);
+        expect(CaseIdentifyRegex.isOnlyNumber('hello.world'), isFalse);
       });
     });
   });

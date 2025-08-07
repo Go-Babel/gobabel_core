@@ -20,6 +20,7 @@ class CaseIdentifyRegex {
   // If you wan't without end suffix optional (ex: .dart), use: (?<!\w)\w{1,}(?:\/\w+){1,}\/?(?!\w)
 
   static const String importCase = r'^\w+:(?:[\w/\.]+)$';
+  static const String numberCase = r'^\d+$';
   static const String pathCase = r'^(?:'
       r'[\/]$|' // Just /
       r'[\/][\w-]+(?:\.[\w]+)?[\/]?|' // /splash, /splash.dart, /splash.dart/
@@ -29,7 +30,7 @@ class CaseIdentifyRegex {
       r')$';
   static const String camelCase = r'^[a-z][a-z0-9]*([A-Z][a-zA-Z0-9]*)+$';
   static const String constantCase =
-      r'(?<!\w)[A-Z0-9]{1,}(?:_[A-Z0-9]+){1,}(?!\w)';
+      r'^(?<!\w)[A-Z0-9]{1,}(?:_[A-Z0-9]+){1,}(?!\w)$';
   static const String dotCase =
       r'^(?<!\w)[a-z0-9]{1,}(?:\.[a-z0-9]+){1,}(?!\w)$';
   static const String headerCase = r'^[A-Z][a-z0-9]*(-[A-Z][a-z0-9]*)+$';
@@ -37,9 +38,9 @@ class CaseIdentifyRegex {
       r'^[A-Z][a-zA-Z0-9]*(?:\.[A-Z][a-zA-Z0-9]*)+$';
   static const String pascalCase = r'^([A-Z][a-zA-Z0-9]*){2,}$';
   static const String paramCase =
-      r'(?<!\w)[a-z0-9]{1,}(?:-[a-z0-9]+){1,}(?!\w)';
+      r'^(?<!\w)[a-z0-9]{1,}(?:-[a-z0-9]+){1,}(?!\w)$';
   static const String snakeCase =
-      r'(?<!\w)[a-z0-9]{1,}(?:_[a-z0-9]+){1,}(?!\w)';
+      r'^(?<!\w)[a-z0-9]{1,}(?:_[a-z0-9]+){1,}(?!\w)$';
 
   /// The FULL TEXT should be in the case you want to identify.
   static bool isCase(String value, String regex) {
@@ -63,6 +64,7 @@ class CaseIdentifyRegex {
   static bool isPascalCase(String value) => isCase(value, pascalCase);
   static bool isParamCase(String value) => isCase(value, paramCase);
   static bool isSnakeCase(String value) => isCase(value, snakeCase);
+  static bool isOnlyNumber(String value) => isCase(value, numberCase);
 
   /// Detects if a string contains base64 encoded content.
   /// This includes PEM format certificates, keys, and other base64 data.
@@ -404,8 +406,9 @@ class CaseIdentifyRegex {
     if (value.startsWith('../')) return true;
 
     // Check for paths containing $ variables
-    if (RegExp(r'[\/\\]').hasMatch(value) && RegExp(r'\$').hasMatch(value))
+    if (RegExp(r'[\/\\]').hasMatch(value) && RegExp(r'\$').hasMatch(value)) {
       return true;
+    }
 
     // Check for file extensions
     if (containsFileReference(value)) return true;
@@ -505,7 +508,7 @@ class CaseIdentifyRegex {
   /// - 1:515286619892:android:c9ebb42700dfc53f6630a1
   static bool isFirebaseAppIdLike(String value) {
     if (value.isEmpty) return false;
-    
+
     final firebaseAppIdPattern = RegExp(r'^[a-zA-Z0-9:]+$');
     return firebaseAppIdPattern.hasMatch(value);
   }
@@ -522,6 +525,7 @@ class CaseIdentifyRegex {
         isParamCase(value) ||
         isPathCase(value) ||
         isSnakeCase(value) ||
+        isOnlyNumber(value) ||
         containsSha1Key(value) ||
         // This includes SHA224, SHA256, SHA384, SHA512
         containsSha2Key(value) ||

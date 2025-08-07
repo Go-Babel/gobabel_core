@@ -8,20 +8,47 @@ import 'package:meta/meta.dart';
 /// while "Hello world" (ratio of 10.0) would be accepted.
 const double maxAcceptedLettersPerSpaceRatio = 4.0;
 
-bool shouldAutomaticallyBeConsideredAValidString(String value) {
+bool shouldAutomaticallyBeConsideredAValidString(
+  String value, {
+  bool shouldLog = false,
+}) {
   if (value.isEmpty) return false;
-  if (value.length > 150) return false;
-  if (value.contains('    ')) return false;
-  // Check space-to-letter ratio first - if it's too low, reject immediately
-  final lettersPerSpaceRatio = calculateLettersPerSpaceRatio(value);
-  if (lettersPerSpaceRatio < maxAcceptedLettersPerSpaceRatio) {
+  if (value.length > 220) return false;
+  try {
+    final isSentence = isSentencePattern(value);
+    if (isSentence) return true;
+  } catch (error) {
+    if (shouldLog) {
+      print('Error checking sentence pattern: "$error"\n\nString: "$value"');
+    }
+    // If any error occurs, treat it as invalid
     return false;
   }
+  if (value.length > 150) return false;
+  if (value.contains('    ')) return false;
+  try {
+    // Check space-to-letter ratio first - if it's too low, reject immediately
+    final lettersPerSpaceRatio = calculateLettersPerSpaceRatio(value);
+    if (lettersPerSpaceRatio < maxAcceptedLettersPerSpaceRatio) {
+      return false;
+    } else {
+      return true;
+    }
+  } catch (error) {
+    if (shouldLog) {
+      print(
+          'Error calculating letters per space ratio: "$error"\n\nString: "$value"');
+    }
+    // If any error occurs, treat it as invalid
+    return false;
+  }
+}
 
-  // Original check: single word starting with capital letter
-  final RegExp namePattern = RegExp(
-      r'^[A-Z][a-z]+(?:(?:\s?[A-Z]?[a-zI]{1,14}[ .,?]?)|(?:\s?\((?:\s?[A-Z]?[a-zI]{1,14}[ .,?]?)+\)))+$');
-  return namePattern.hasMatch(value);
+final RegExp sentencePatternRegex = RegExp(
+    r'''^(?:(?:[A-z']{1,14} ?[:,.-?!]? ?)|\( ?(?:[A-z']{1,14} ?[:,.-?!]? ?)+ ?\) ?)+$''');
+
+bool isSentencePattern(String value) {
+  return sentencePatternRegex.hasMatch(value);
 }
 
 /// Calculates the ratio of letters (a-z, A-Z) to spaces in the given string.
