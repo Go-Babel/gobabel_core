@@ -15,40 +15,37 @@ bool shouldAutomaticallyBeConsideredAValidString(
   if (value.isEmpty) return false;
   if (value.length > 220) return false;
   try {
-    final isSentence = isSentencePattern(value);
-    if (isSentence) return true;
-  } catch (error) {
-    if (shouldLog) {
-      print('Error checking sentence pattern: "$error"\n\nString: "$value"');
-    }
-    // If any error occurs, treat it as invalid
-    return false;
-  }
-  if (value.length > 150) return false;
-  if (value.contains('    ')) return false;
-  try {
     // Check space-to-letter ratio first - if it's too low, reject immediately
     final lettersPerSpaceRatio = calculateLettersPerSpaceRatio(value);
     if (lettersPerSpaceRatio < maxAcceptedLettersPerSpaceRatio) {
       return false;
-    } else {
-      return true;
     }
   } catch (error) {
     if (shouldLog) {
       print(
           'Error calculating letters per space ratio: "$error"\n\nString: "$value"');
     }
+  }
+  if (value.contains('   ')) return false;
+  try {
+    final isSentence = isSentencePattern(value);
+    if (isSentence) return true;
+    return false;
+  } catch (error) {
+    if (shouldLog) {
+      print('Error checking sentence pattern: "$error"\n\nString: "$value"');
+    }
+
     // If any error occurs, treat it as invalid
     return false;
   }
 }
 
 final RegExp sentencePatternRegex = RegExp(
-    r'''^(?:(?:[A-z']{1,14} ?[:,.-?!]? ?)|\( ?(?:[A-z']{1,14} ?[:,.-?!]? ?)+ ?\) ?)+$''');
+    r'''(?:(?:[A-Za-z']{1,14} ?[-:,.?!]? ?)|\( ?(?:[A-Za-z']{1,14} ?[-:,.?!]? ?)+ ?\) ?)+''');
 
 bool isSentencePattern(String value) {
-  return sentencePatternRegex.hasMatch(value);
+  return sentencePatternRegex.allMatches(value).length == 1;
 }
 
 /// Calculates the ratio of letters (a-z, A-Z) to spaces in the given string.

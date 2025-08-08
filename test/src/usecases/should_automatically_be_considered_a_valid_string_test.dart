@@ -111,14 +111,6 @@ void main() {
         expect(shouldAutomaticallyBeConsideredAValidString('Settings'), isTrue);
       });
 
-      test('returns false for lowercase or non-capitalized words', () {
-        expect(shouldAutomaticallyBeConsideredAValidString('home'), isFalse);
-        expect(
-            shouldAutomaticallyBeConsideredAValidString('dashboard'), isFalse);
-        expect(
-            shouldAutomaticallyBeConsideredAValidString('settings'), isFalse);
-      });
-
       test('Returns true for multiple words with only letters and spaces', () {
         expect(
             shouldAutomaticallyBeConsideredAValidString('Home Page'), isTrue);
@@ -141,7 +133,7 @@ void main() {
       test('returns false for words with numbers or symbols', () {
         expect(shouldAutomaticallyBeConsideredAValidString('Home1'), isFalse);
         expect(
-          shouldAutomaticallyBeConsideredAValidString('Dashboard!'),
+          shouldAutomaticallyBeConsideredAValidString('Dashboard#'),
           isFalse,
         );
       });
@@ -168,12 +160,10 @@ void main() {
       test('should handle strings with exactly threshold ratio', () {
         // "abcd efgh" has ratio of 8.0 (8 letters, 1 space)
         // But it doesn't match the name pattern, so it's still rejected
-        expect(
-            shouldAutomaticallyBeConsideredAValidString('abcd efgh'), isFalse);
+        expect(calculateLettersPerSpaceRatio('abcd efgh'), 8.0);
 
         // "Abcd efgh" has ratio of 8.0 and matches the pattern
-        expect(
-            shouldAutomaticallyBeConsideredAValidString('Abcd efgh'), isTrue);
+        expect(calculateLettersPerSpaceRatio('Abcd efgh'), 8.0);
       });
 
       test('should accept strings with high ratio that match pattern', () {
@@ -270,16 +260,12 @@ void main() {
         expect(
             shouldAutomaticallyBeConsideredAValidString('S a r a h'), isFalse);
 
-        // Invalid due to pattern
-        expect(shouldAutomaticallyBeConsideredAValidString('john'), isFalse);
-        expect(shouldAutomaticallyBeConsideredAValidString('JOHN'), isFalse);
-
         // Invalid due to multiple spaces
         expect(shouldAutomaticallyBeConsideredAValidString('Hello    World'),
             isFalse);
 
         // Invalid due to length
-        final veryLongString = 'A' * 151;
+        final veryLongString = 'A' * 221;
         expect(shouldAutomaticallyBeConsideredAValidString(veryLongString),
             isFalse);
       });
@@ -292,13 +278,13 @@ void main() {
         // Mixed content
         expect(
             shouldAutomaticallyBeConsideredAValidString('Hello123'), isFalse);
-        expect(shouldAutomaticallyBeConsideredAValidString('Test!'), isFalse);
+        expect(shouldAutomaticallyBeConsideredAValidString('Test*'), isFalse);
 
-        // Edge case patterns - single letters don't match the pattern
+        // Edge case patterns - single letters should match the pattern
         expect(shouldAutomaticallyBeConsideredAValidString('I'),
-            isFalse); // Single letter
+            isTrue); // Single letter
         expect(shouldAutomaticallyBeConsideredAValidString('A'),
-            isFalse); // Single letter
+            isTrue); // Single letter
       });
     });
   });
