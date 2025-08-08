@@ -18,3 +18,4 @@ typedef AppearencesCount = int;
 typedef ReviewSessionUuid = String;
 typedef IsUserFacingString = bool;
 typedef AiGeneratedIsUserFacingString = bool;
+typedef NewRemapedString = String;
